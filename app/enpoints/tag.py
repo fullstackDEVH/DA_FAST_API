@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, status, Path
 from ..database import get_db
 from sqlalchemy.orm import Session
-from ..schemas.tag import TagCreate
+from ..schemas.tag import TagCreate, TagRead
 from ..helpers.oauth2 import JWTBearer
 from ..services.tagService import TagService
 from ..helpers.response import make_response_object
@@ -19,7 +19,7 @@ def get_tags_service(db: Session = Depends(get_db)):
     return TagService(db)
 
 
-@router.get("/", status_code=status.HTTP_200_OK, response_model=TagCreate)
+@router.get("/", status_code=status.HTTP_200_OK)
 async def get_tag(
     tag_id: str,
     tagsService: TagService = Depends(get_tags_service),
@@ -36,18 +36,16 @@ async def get_tags(
     return make_response_object(response)
 
 
-@router.post("/", status_code=status.HTTP_201_CREATED, response_model=TagCreate)
+@router.post("/", status_code=status.HTTP_201_CREATED)
 async def create_tag(
-    contract: TagCreate,
+    tag: TagCreate,
     tagsService: TagService = Depends(get_tags_service),
 ):
-    response = await tagsService.create(contract)
+    response = await tagsService.create_tag(tag)
     return make_response_object(response)
 
 
-@router.patch(
-    "/{contract_id}", status_code=status.HTTP_200_OK, response_model=TagCreate
-)
+@router.patch("/{tag_id}", status_code=status.HTTP_200_OK)
 async def update_tag_by_id(
     tag: TagCreate,
     tag_id: str = Path(title="The ID of the item to get"),

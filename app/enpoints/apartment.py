@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, status, UploadFile, Form, File, Path
-from typing import Annotated
+from typing import Annotated, List
 from ..database import get_db, Apartment
+from pydantic import BaseModel, UUID4
 from sqlalchemy.orm import Session
 from ..schemas.apartment import ApartmentUpdateSchema
 from ..helpers.oauth2 import JWTBearer
@@ -57,17 +58,19 @@ async def get_apartment_by_room(
     name: Annotated[str, Form()],
     desc: Annotated[str, Form()],
     room: Annotated[str, Form()],
+    tag_ids: Annotated[list[str], Form()],
     image: UploadFile = File(...),
     apartmentService: ApartmentService = Depends(get_apartment_service),
 ):
-    response = await apartmentService.create_apartment(name, desc, room, image)
+    response = await apartmentService.create_apartment(name, desc, room, image, tag_ids)
+
     return make_response_object(response)
 
 
 @router.patch("/{apartment_id}", status_code=status.HTTP_200_OK)
 async def update_apartment(
-    apartment_id :  Annotated[str, Path(title="The ID apartment to get")],
-    apartment : ApartmentUpdateSchema,
+    apartment_id: Annotated[str, Path(title="The ID apartment to get")],
+    apartment: ApartmentUpdateSchema,
     apartmentService: ApartmentService = Depends(get_apartment_service),
 ):
     response = await apartmentService.update(apartment_id, apartment)

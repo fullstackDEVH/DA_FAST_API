@@ -1,8 +1,9 @@
 from fastapi import status, UploadFile, HTTPException
 from sqlalchemy.orm import Session
-from ..database import Apartment
+from ..database import Apartment, ApartmentTag
 from ..schemas.apartment import ApartmentSchema, ApartmentUpdateSchema
 from ..helpers.upload import upload_file, delete_file_upload
+from typing import List
 import uuid
 import logging
 
@@ -25,7 +26,7 @@ class ApartmentService:
         return found_apartment
 
     async def create_apartment(
-        self, name: str, desc: str, room: str, image: UploadFile
+        self, name: str, desc: str, room: str, image: UploadFile, tag_ids: List[str]
     ):
         found_apartment = await self.get_apartment_by_room(userId=None, room=room)
 
@@ -39,16 +40,24 @@ class ApartmentService:
             file_upload=image,
         )
 
-        apartment_create = self.db.add(
-            Apartment(
-                id=uuid.uuid4(),
-                name=name,
-                desc=desc,
-                room=room,
-                img_room=banner_apartment,
-            )
+        apartment_create = Apartment(
+            id=uuid.uuid4(),
+            name=name,
+            desc=desc,
+            room=room,
+            img_room=banner_apartment,
         )
 
+        apartment_tags = []
+        for tag_id in tag_ids[0].split(","):
+            apartment_tag = ApartmentTag(
+                id=uuid.uuid4(), apartment_id=apartment_create.id, tag_id=tag_id
+            )
+            apartment_tags.append(apartment_tag)
+
+        apartment_create.apartment_tags = apartment_tags
+        
+        self.db.add(apartment_create)
         self.db.commit()
         return apartment_create
 
@@ -66,6 +75,10 @@ class ApartmentService:
 
     async def gets(self):
         apartments = self.db.query(Apartment).all()
+        # apartments_with_tag = session.query(Apartment).filter(Apartment.tags.any(Tag.name == 'biệt thự')).all()
+
+        # for apartment in apartments_with_tag:
+        #     print(f"Apartment Name: {apartment.name}, Description: {apartment.desc}, Room: {apartment.room}")
         return apartments
 
     async def update(self, apartment_id: str, apartment: ApartmentUpdateSchema):

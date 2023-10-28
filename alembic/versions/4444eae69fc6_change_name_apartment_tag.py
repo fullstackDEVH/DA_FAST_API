@@ -1,8 +1,8 @@
-"""change relationship
+"""change name apartment tag
 
-Revision ID: 00929f208960
-Revises: 63b901e26ec4
-Create Date: 2023-09-24 14:38:35.794346
+Revision ID: 4444eae69fc6
+Revises: 02b89987c298
+Create Date: 2023-10-28 17:10:14.074104
 
 """
 from typing import Sequence, Union
@@ -12,8 +12,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '00929f208960'
-down_revision: Union[str, None] = '63b901e26ec4'
+revision: str = '4444eae69fc6'
+down_revision: Union[str, None] = '02b89987c298'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

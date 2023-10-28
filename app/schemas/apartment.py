@@ -15,12 +15,6 @@ class ApartmentSchema(BaseModel):
         from_attributes = True
 
 
-class ApartmentCreateSchema(BaseModel):
-    name: str
-    desc: str
-    room: str
-
-
 class ApartmentUpdateSchema(BaseModel):
     name: str | None = None
     desc: str | None = None

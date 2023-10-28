@@ -92,6 +92,7 @@ class Apartment(Base):
 
     # Tạo mối quan hệ với bảng User
     apartment_contract = relationship("Contract", back_populates="apartment")
+    apartment_tags = relationship("ApartmentTag", back_populates="apartment")
 
 
 class Bill(Base):
@@ -146,3 +147,26 @@ class Notification(Base):
         server_default=text("now()"),
         onupdate=func.current_timestamp(),
     )
+
+
+class ApartmentTag(Base):
+    __tablename__ = "apartment_tag"
+
+    id = Column(String(255), primary_key=True)
+    apartment_id = Column(String(255), ForeignKey("apartment.id", ondelete="CASCADE"))
+    tag_id = Column(String(255), ForeignKey("tag.id", ondelete="CASCADE"))
+
+    tag = relationship("Tag", back_populates="tag_apartment")
+    apartment = relationship("Apartment", back_populates="apartment_tags")
+
+
+# Với mối quan hệ này, bạn có thể dễ dàng truy cập danh sách các tags của một apartment và danh sách các apartments của một tag thông qua các thuộc tính tags và apartments.
+
+
+class Tag(Base):
+    __tablename__ = "tag"
+
+    id = Column(String(255), primary_key=True)
+    name = Column(String(255), unique=True, nullable=False)
+
+    tag_apartment = relationship("ApartmentTag", back_populates="tag")
