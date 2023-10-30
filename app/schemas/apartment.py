@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr, Field
-from fastapi import UploadFile, Form
+from fastapi import UploadFile, Form, File
 from typing import Annotated
 
 
@@ -20,8 +20,15 @@ class ApartmentUpdateSchema(BaseModel):
     desc: str | None = None
     room: str | None = None
 
-
 class ApartmentCreateSchte(BaseModel):
-    username: Annotated[str, Form()]
-    password: Annotated[str, Form()]
-    img: Annotated[UploadFile, Form()]
+    name: str
+    desc: str
+    room: str
+    price_per_day: int
+    num_bedrooms: int
+    num_living_rooms: int
+    num_bathrooms: int
+    num_toilets: int
+    rate: int
+    tag_ids: list[str]
+    amenities: list[str]

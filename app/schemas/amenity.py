@@ -3,11 +3,11 @@ from fastapi import UploadFile, Form
 from typing import Annotated
 
 
-class TagCreate(BaseModel):
+class AmenityCreate(BaseModel):
     name: str
     desc: str
 
 
-class TagRead(BaseModel):
+class AmenityRead(BaseModel):
     name: str
     id: str

@@ -12,6 +12,7 @@ from sqlalchemy import (
     Boolean,
     DateTime,
     TEXT,
+    Table,
 )
 from sqlalchemy.orm import relationship
 
@@ -74,6 +75,14 @@ class Contract(Base):
     user = relationship("User", back_populates="user_contract")
 
 
+apartment_amenity = Table(
+    "apartment_amenity",
+    Base.metadata,
+    Column("apartment_id", String(255), ForeignKey("apartment.id")),
+    Column("amenity_id", String(255), ForeignKey("amenity.id")),
+)
+
+
 class Apartment(Base):
     __tablename__ = "apartment"
 
@@ -89,10 +98,20 @@ class Apartment(Base):
         server_default=text("now()"),
         onupdate=func.current_timestamp(),
     )
+    price_per_day = Column(Integer, nullable=False)
+    num_bedrooms = Column(Integer, nullable=False)
+    num_living_rooms = Column(Integer, nullable=False)
+    num_bathrooms = Column(Integer, nullable=False)
+    num_toilets = Column(Integer, nullable=False)
+    num_toilets = Column(Integer, nullable=False)
+    rate = Column(Integer, nullable=False)
 
     # Tạo mối quan hệ với bảng User
     apartment_contract = relationship("Contract", back_populates="apartment")
     apartment_tags = relationship("ApartmentTag", back_populates="apartment")
+    amenities = relationship(
+        "Amenity", secondary=apartment_amenity, back_populates="apartments"
+    )
 
 
 class Bill(Base):
@@ -168,5 +187,17 @@ class Tag(Base):
 
     id = Column(String(255), primary_key=True)
     name = Column(String(255), unique=True, nullable=False)
-
+    desc = Column(String(255), nullable=False)
     tag_apartment = relationship("ApartmentTag", back_populates="tag")
+
+
+# Lớp đại diện cho các tiện nghi
+class Amenity(Base):
+    __tablename__ = "amenity"
+
+    id = Column(String(255), primary_key=True)
+    name = Column(String(42), nullable=False, index=True)
+    desc = Column(String(255), nullable=False)
+    apartments = relationship(
+        "Apartment", secondary=apartment_amenity, back_populates="amenities"
+    )

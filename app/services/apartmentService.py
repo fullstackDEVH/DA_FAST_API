@@ -1,7 +1,11 @@
 from fastapi import status, UploadFile, HTTPException
-from sqlalchemy.orm import Session
-from ..database import Apartment, ApartmentTag
-from ..schemas.apartment import ApartmentSchema, ApartmentUpdateSchema
+from sqlalchemy.orm import Session, joinedload
+from ..database import Apartment, ApartmentTag, Tag, Amenity, apartment_amenity
+from ..schemas.apartment import (
+    ApartmentSchema,
+    ApartmentUpdateSchema,
+    ApartmentCreateSchte,
+)
 from ..helpers.upload import upload_file, delete_file_upload
 from typing import List
 import uuid
@@ -17,6 +21,10 @@ class ApartmentService:
     def __init__(self, db: Session):
         self.db = db
 
+    async def gets_all(self):
+        apartments = self.db.query(Apartment).all()
+        return apartments
+
     async def get_apartment_by_room(
         self, userId: str | None = None, room: int | None = None
     ) -> ApartmentSchema:
@@ -25,38 +33,85 @@ class ApartmentService:
 
         return found_apartment
 
+    async def get_apartment_by_id(
+        self, apartment_id: str | None = None
+    ) -> ApartmentSchema:
+        found_apartment = (
+            self.db.query(Apartment).filter(Apartment.id == apartment_id).first()
+        )
+        apartment = self.db.query(Apartment).filter_by(id=apartment_id).\
+            options(
+                joinedload(Apartment.apartment_contract),  # Lấy thông tin hợp đồng
+                joinedload(Apartment.apartment_tags).joinedload(ApartmentTag.tag),  # Lấy thông tin các thẻ và tên thẻ
+                joinedload(Apartment.amenities)  # Lấy thông tin về tiện nghi
+            ).first()
+
+        # Kiểm tra xem căn hộ có tồn tại không
+        if apartment is not None:
+            # In ra thông tin của căn hộ
+            print("Tên căn hộ:", apartment.name)
+            print("Mô tả:", apartment.desc)
+            print("Hợp đồng:", apartment.apartment_contract)
+            print("Thẻ:", [apartment_tag.tag.name for apartment_tag in apartment.apartment_tags])
+            print("Tiện nghi:", [amenity.name for amenity in apartment.amenities])
+        else:
+            print("Căn hộ không tồn tại")
+       
+        # tags_in_apartment = [
+        #     apartment_tag.tag.name for apartment_tag in found_apartment.apartment_tags
+        # ]
+
+        return found_apartment
+
     async def create_apartment(
-        self, name: str, desc: str, room: str, image: UploadFile, tag_ids: List[str]
+        self, apartment: ApartmentCreateSchte, image: UploadFile
     ):
-        found_apartment = await self.get_apartment_by_room(userId=None, room=room)
+        found_apartment = await self.get_apartment_by_room(
+            userId=None, room=apartment.room
+        )
 
         if found_apartment:
             raise HTTPException(status_code=400, detail="Apartment is exist!!")
 
         banner_apartment = upload_file(
             folder_name="data/banner/apartment",
-            endpoint_path=room,
+            endpoint_path=apartment.room,
             allowed_image_types={"image/png", "image/jpeg"},
             file_upload=image,
         )
 
         apartment_create = Apartment(
             id=uuid.uuid4(),
-            name=name,
-            desc=desc,
-            room=room,
+            name=apartment.name,
+            desc=apartment.desc,
+            room=apartment.room,
+            price_per_day=apartment.price_per_day,
+            num_bedrooms=apartment.num_bedrooms,
+            num_living_rooms=apartment.num_living_rooms,
+            num_bathrooms=apartment.num_bathrooms,
+            num_toilets=apartment.num_toilets,
             img_room=banner_apartment,
+            rate=apartment.rate,
         )
 
         apartment_tags = []
-        for tag_id in tag_ids[0].split(","):
+        for tag_id in apartment.tag_ids[0].split(","):
             apartment_tag = ApartmentTag(
                 id=uuid.uuid4(), apartment_id=apartment_create.id, tag_id=tag_id
             )
             apartment_tags.append(apartment_tag)
 
         apartment_create.apartment_tags = apartment_tags
-        
+
+        amenities = []
+        for amenity_id in apartment.amenities[0].split(","):
+            amenity = self.db.query(Amenity).filter(Amenity.id == amenity_id).first()
+            if amenity:
+                amenities.append(amenity)
+
+        apartment_create.amenities = amenities
+
+
         self.db.add(apartment_create)
         self.db.commit()
         return apartment_create
@@ -73,13 +128,15 @@ class ApartmentService:
             )
         return found_user
 
-    async def gets(self):
-        apartments = self.db.query(Apartment).all()
-        # apartments_with_tag = session.query(Apartment).filter(Apartment.tags.any(Tag.name == 'biệt thự')).all()
-
-        # for apartment in apartments_with_tag:
-        #     print(f"Apartment Name: {apartment.name}, Description: {apartment.desc}, Room: {apartment.room}")
-        return apartments
+    async def gets_apartment_by_tag_id(self, tag_id):
+        apartments_with_tag = (
+            self.db.query(Apartment)
+            .join(Apartment.apartment_tags)
+            .join(ApartmentTag.tag)
+            .filter(Tag.id == tag_id)
+            .all()
+        )
+        return apartments_with_tag
 
     async def update(self, apartment_id: str, apartment: ApartmentUpdateSchema):
         found_apartment = (

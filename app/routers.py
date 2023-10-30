@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from .enpoints import apartment, notication, user, contract, tag
+from .enpoints import apartment, notication, user, contract, tag, amenity
 from .socket import router as socket_router
 
 
@@ -14,4 +14,5 @@ router.include_router(contract.router, prefix="/contracts", tags=["contracts"])
 router.include_router(
     notication.router, prefix="/notifications", tags=["notifications"]
 )
+router.include_router(amenity.router, prefix="/amenities", tags=["amenities"])
 # router.include_router(socket_router, prefix="/sockets", tags=["sockets"])
