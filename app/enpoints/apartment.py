@@ -23,7 +23,6 @@ def get_apartment_service(db: Session = Depends(get_db)):
     return ApartmentService(db)
 
 
-
 @router.get("/all", status_code=status.HTTP_200_OK)
 async def get_apartments(
     apartmentService: ApartmentService = Depends(get_apartment_service),
@@ -42,12 +41,15 @@ async def get_apartment_by_room(
     return make_response_object(response)
 
 
-@router.get("/{tag_id}", status_code=status.HTTP_200_OK)
+@router.get("/tag", status_code=status.HTTP_200_OK)
 async def gets_apartment_by_tag_id(
     tag_id: str | None = None,
     apartmentService: ApartmentService = Depends(get_apartment_service),
 ):
-    response = await apartmentService.gets_apartment_by_tag_id(tag_id)
+    if tag_id is not None:
+        response = await apartmentService.gets_apartment_by_tag_id(tag_id)
+    else:
+        response = await apartmentService.gets_all()
     return make_response_object(response)
 
 
@@ -60,7 +62,6 @@ async def get_apartment_by_id(
     return make_response_object(response)
 
 
-
 @router.get("/{room}/banner")
 async def get_file(room: str):
     # Đường dẫn đến tệp ảnh
@@ -71,8 +72,6 @@ async def get_file(room: str):
         return {"message": "File not found"}
 
     return FileResponse(path_banner_apartment)
-
-
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED)

@@ -1,7 +1,7 @@
 from fastapi import status
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
-from ..database import User
+from ..database import User, Contract
 from ..schemas import user
 from ..helpers.auth import verify_password, hash_password
 from ..helpers.oauth2 import signJWT, decodeJWT
@@ -60,6 +60,10 @@ class UserService:
     async def get_user_by_email(self, email: str) -> user.UserSchema:
         found_user = self.db.query(User).filter(User.email == email).first()
         return found_user
+    
+    async def get_user_by_id(self, user_id: str) -> user.UserSchema:
+        found_user = self.db.query(User).filter(User.id == user_id).first()
+        return found_user
 
     async def user_login(self, user_obj: user.UserLoginSchema):
         found_user = await self.get_user_by_email(email=user_obj.email)
@@ -115,9 +119,12 @@ class UserService:
         found_users = self.db.query(User).all()
         return found_users
 
-    async def delete_user(self, email: str):
+    async def delete_user(self, email: str, user_id : str):
         found_user_query = await self.get_user_by_email(email)
 
+        self.db.query(Contract).filter(Contract.user_id == user_id).delete()
+
+        print(f"user : {found_user_query}")
         if not found_user_query:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="Email not found!!"
