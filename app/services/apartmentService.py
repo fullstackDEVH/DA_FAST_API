@@ -1,12 +1,19 @@
 from fastapi import status, UploadFile, HTTPException
 from sqlalchemy.orm import Session, joinedload
-from ..database import Apartment, ApartmentTag, Tag, Amenity, apartment_amenity
+from ..database import (
+    Apartment,
+    ApartmentTag,
+    Tag,
+    Amenity,
+    apartment_amenity,
+    ApartmentImage,
+)
 from ..schemas.apartment import (
     ApartmentSchema,
     ApartmentUpdateSchema,
     ApartmentCreateSchte,
 )
-from ..helpers.upload import upload_file, delete_file_upload
+from ..helpers.upload import upload_file, delete_file_upload, upload_files
 from typing import List
 import uuid
 import logging
@@ -72,38 +79,22 @@ class ApartmentService:
 
         return found_apartment
 
-    async def create_apartment(
-        self, apartment: ApartmentCreateSchte, image: UploadFile
-    ):
-        found_apartment = await self.get_apartment_by_room(
-            userId=None, room=apartment.room
-        )
-
-        if found_apartment:
-            raise HTTPException(status_code=400, detail="Apartment is exist!!")
-
-        banner_apartment = upload_file(
-            folder_name="data/banner/apartment",
-            endpoint_path=apartment.room,
-            allowed_image_types={"image/png", "image/jpeg"},
-            file_upload=image,
-        )
-
+    async def create_apartment(self, apartment: ApartmentCreateSchte):
         apartment_create = Apartment(
             id=uuid.uuid4(),
             name=apartment.name,
             desc=apartment.desc,
-            room=apartment.room,
             price_per_day=apartment.price_per_day,
             num_bedrooms=apartment.num_bedrooms,
             num_living_rooms=apartment.num_living_rooms,
             num_bathrooms=apartment.num_bathrooms,
             num_toilets=apartment.num_toilets,
-            img_room=banner_apartment,
+            total_people=apartment.total_people,
             rate=apartment.rate,
         )
 
         apartment_tags = []
+
         for tag_id in apartment.tag_ids[0].split(","):
             apartment_tag = ApartmentTag(
                 id=uuid.uuid4(), apartment_id=apartment_create.id, tag_id=tag_id
@@ -122,7 +113,38 @@ class ApartmentService:
 
         self.db.add(apartment_create)
         self.db.commit()
+
         return apartment_create
+
+    async def upload_images(self, apartment_id: str, images: list[UploadFile]):
+        try:
+            uploaded_images = await upload_files(
+                folder_name=f"data/banner/apartment/{apartment_id}",
+                allowed_image_types={"image/png", "image/jpeg"},
+                files=images,
+            )
+
+            for image_path in uploaded_images:
+                db_image = ApartmentImage(
+                    id=str(uuid.uuid4()),
+                    apartment_id=apartment_id,
+                    image_url=image_path,
+                )
+                self.db.add(db_image)
+
+            self.db.commit()
+
+            return "Update success"
+
+        except Exception as e:
+            # Log the error or handle it as appropriate for your application
+            logging.error(f"An error occurred during image upload: {e}")
+
+            # Rollback the database transaction in case of an error
+            self.db.rollback()
+
+            # Return an error message or raise the exception if needed
+            return f"Error: {e}"
 
     async def get(self, access_token: str, username: str | None):
         if username:

@@ -77,11 +77,20 @@ async def get_file(room: str):
 @router.post("/", status_code=status.HTTP_201_CREATED)
 async def create_apartment(
     apartment: ApartmentCreateSchte = Depends(),
-    image: UploadFile = File(...),
     apartmentService: ApartmentService = Depends(get_apartment_service),
 ):
-    response = await apartmentService.create_apartment(apartment, image)
+    response = await apartmentService.create_apartment(apartment)
 
+    return make_response_object(response)
+
+
+@router.post("/upload/{apartment_id}", status_code=status.HTTP_201_CREATED)
+async def upload_images_apartment(
+    apartment_id: str,
+    images: list[UploadFile] = File(...),
+    apartmentService: ApartmentService = Depends(get_apartment_service),
+):
+    response = await apartmentService.upload_images(apartment_id, images)
     return make_response_object(response)
 
 
@@ -95,10 +104,10 @@ async def update_apartment(
     return make_response_object(response)
 
 
-@router.delete("/{room}")
+@router.delete("/{apartment_id}")
 async def delete_apartment(
-    room: str | None,
+    apartment_id: str | None,
     apartmentService: ApartmentService = Depends(get_apartment_service),
 ):
-    response = await apartmentService.delete(room)
+    response = await apartmentService.delete(apartment_id)
     return make_response_object(response)

@@ -89,8 +89,6 @@ class Apartment(Base):
     id = Column(String(255), primary_key=True)
     name = Column(String(42), nullable=False, index=True)
     desc = Column(String(255))
-    room = Column(String(255), nullable=False, index=True, unique=True)
-    img_room = Column(String(255))
     created_at = Column(TIMESTAMP(timezone=True), server_default=text("now()"))
     updated_at = Column(
         TIMESTAMP(timezone=True),
@@ -103,8 +101,8 @@ class Apartment(Base):
     num_living_rooms = Column(Integer, nullable=False)
     num_bathrooms = Column(Integer, nullable=False)
     num_toilets = Column(Integer, nullable=False)
-    num_toilets = Column(Integer, nullable=False)
     rate = Column(Integer, nullable=False)
+    total_people = Column(Integer, nullable=False)
 
     # Tạo mối quan hệ với bảng User
     apartment_contract = relationship("Contract", back_populates="apartment")
@@ -112,6 +110,19 @@ class Apartment(Base):
     amenities = relationship(
         "Amenity", secondary=apartment_amenity, back_populates="apartments"
     )
+    images = relationship("ApartmentImage", back_populates="apartment")
+
+
+class ApartmentImage(Base):
+    __tablename__ = "apartment_image"
+    id = Column(String(255), primary_key=True)
+    apartment_id = Column(
+        String(255), ForeignKey("apartment.id", ondelete="CASCADE"), nullable=False
+    )
+    image_url = Column(String(255), nullable=False)
+    created_at = Column(TIMESTAMP(timezone=True), server_default=text("now()"))
+
+    apartment = relationship("Apartment", back_populates="images")
 
 
 class Bill(Base):
