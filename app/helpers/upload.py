@@ -27,7 +27,7 @@ def upload_file(
         with open(image_path_banner_apartment, "wb") as f:
             f.write(file_upload.file.read())
 
-        return f"/apartments/{endpoint_path}/banner"
+        return image_path_banner_apartment
     except Exception as error:
         raise HTTPException(status_code=500, detail="Lỗi server")
     finally:

@@ -47,10 +47,14 @@ class ContractService:
         return self.db.query(Contract).filter(Contract.id == id).first()
 
     async def create(self, contract: CreateContractSchema):
-        found_contract = self.db.query(Contract).filter(
-            Contract.apartment_id == contract.apartment_id,
-            Contract.user_id == contract.user_id,
-        ).first()
+        found_contract = (
+            self.db.query(Contract)
+            .filter(
+                Contract.apartment_id == contract.apartment_id,
+                Contract.user_id == contract.user_id,
+            )
+            .first()
+        )
 
         if found_contract:
             raise HTTPException(status_code=400, detail="Contract is exist !!")
@@ -63,6 +67,8 @@ class ContractService:
                 end_date=contract.end_date,
                 apartment_id=contract.apartment_id,
                 user_id=contract.user_id,
+                total_amount=contract.total_amount,
+                num_of_people=contract.num_of_people,
             )
         )
         self.db.commit()

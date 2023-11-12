@@ -1,4 +1,4 @@
-from fastapi import status
+from fastapi import status, UploadFile
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from ..database import User, Contract
@@ -9,8 +9,7 @@ from email.mime.text import MIMEText
 import uuid
 import logging
 import smtplib
-import secrets
-import string
+from ..helpers.upload import upload_file
 
 
 logging.basicConfig(level=logging.INFO)
@@ -60,7 +59,7 @@ class UserService:
     async def get_user_by_email(self, email: str) -> user.UserSchema:
         found_user = self.db.query(User).filter(User.email == email).first()
         return found_user
-    
+
     async def get_user_by_id(self, user_id: str) -> user.UserSchema:
         found_user = self.db.query(User).filter(User.id == user_id).first()
         return found_user
@@ -89,6 +88,7 @@ class UserService:
                 phonenumber=user_obj.phonenumber,
                 email=user_obj.email,
                 password=hash_password(user_obj.password),
+                system_role=user_obj.system_role,
             )
         )
 
@@ -119,12 +119,43 @@ class UserService:
         found_users = self.db.query(User).all()
         return found_users
 
-    async def delete_user(self, email: str, user_id : str):
+    async def update_avatar(self, avatar: UploadFile, user_id: str):
+        found_user = await self.get_user_by_id(user_id)
+
+        if not found_user:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        pathName = upload_file(
+            folder_name=f"data/avatar/users",
+            allowed_image_types=["image/png", "image/jpeg", "image/jpg"],
+            endpoint_path=user_id,
+            file_upload=avatar,
+        )
+
+        found_user.avatar = pathName
+        self.db.commit()
+        return found_user
+
+    async def update_user(self, user_id: str, user_update: user.UserUpdateSchema):
+        found_user = await self.get_user_by_id(user_id)
+
+        if not found_user:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        user_update_record = user_update.model_dump(exclude_unset=True)
+
+        for key, value in user_update_record.items():
+            setattr(found_user, key, value)
+
+        self.db.commit()
+        self.db.refresh(found_user)
+        return found_user
+
+    async def delete_user(self, email: str, user_id: str):
         found_user_query = await self.get_user_by_email(email)
 
         self.db.query(Contract).filter(Contract.user_id == user_id).delete()
 
-        print(f"user : {found_user_query}")
         if not found_user_query:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="Email not found!!"

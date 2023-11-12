@@ -1,4 +1,5 @@
 from pydantic import BaseModel, EmailStr
+from ..helpers.constant import UserRole
 
 
 class UserSchema(BaseModel):
@@ -8,8 +9,8 @@ class UserSchema(BaseModel):
     password: str
     avatar: str | None
     email: EmailStr | None
-    verification_code  : str | None
-    verified : bool
+    verification_code: str | None
+    verified: bool
 
     class Config:
         from_attributes = True
@@ -25,6 +26,14 @@ class UserCreateSchema(BaseModel):
     phonenumber: str
     username: str
     password: str
+    system_role: str = "RENTER"
+
+
+class UserUpdateSchema(BaseModel):
+    phonenumber: str | None = None
+    username: str | None = None
+    password: str | None = None
+    system_role: str | None = "RENTER"
 
 
 class userResponseSchema(BaseModel):

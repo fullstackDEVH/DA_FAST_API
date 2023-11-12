@@ -1,11 +1,13 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, UploadFile, File
 from ..database import get_db
 from sqlalchemy.orm import Session
-from ..schemas.user import UserCreateSchema, UserLoginSchema
+from ..schemas.user import UserCreateSchema, UserLoginSchema, UserUpdateSchema
 from ..helpers.oauth2 import JWTBearer
 from ..services.userService import UserService
 from ..helpers.response import make_response_object
+from fastapi.responses import FileResponse
 import logging
+import os
 
 
 logging.basicConfig(level=logging.INFO)
@@ -49,6 +51,18 @@ async def get_user(
     return make_response_object(response)
 
 
+@router.get("/{user_id}/avatar")
+async def get_file(user_id: str):
+    # Đường dẫn đến tệp ảnh
+    folder_users_avatar = os.path.join("data/avatar/users")
+    path_avatar = os.path.join(folder_users_avatar, user_id)
+
+    if not os.path.exists(path_avatar):
+        return {"message": "File not found"}
+
+    return FileResponse(path_avatar)
+
+
 @router.post("/login", status_code=status.HTTP_200_OK)
 async def login(
     user_create: UserLoginSchema, userService: UserService = Depends(get_user_service)
@@ -77,6 +91,26 @@ async def refresh_token(
 @router.post("/verify_code", status_code=status.HTTP_200_OK)
 async def verify_user_by_code():
     return make_response_object({"data": "scu"})
+
+
+@router.patch("/update_avatar/{user_id}", status_code=status.HTTP_200_OK)
+async def update_avatar(
+    user_id: str,
+    avatar: UploadFile = File(...),
+    userService: UserService = Depends(get_user_service),
+):
+    response = await userService.update_avatar(user_id=user_id, avatar=avatar)
+    return make_response_object(response)
+
+
+@router.patch("/update_user/{user_id}", status_code=status.HTTP_201_CREATED)
+async def update_user(
+    user_id: str,
+    user_update: UserUpdateSchema,
+    userService: UserService = Depends(get_user_service),
+):
+    response = await userService.update_user(user_id=user_id, user_update=user_update)
+    return make_response_object(response)
 
 
 @router.delete("/", status_code=status.HTTP_204_NO_CONTENT)
