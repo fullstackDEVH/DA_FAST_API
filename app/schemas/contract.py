@@ -9,6 +9,8 @@ class CreateContractSchema(BaseModel):
     end_date: datetime
     apartment_id: str
     user_id: str
+    total_amount: int
+    num_of_people: int
 
 
 class UpdateContractSchema(BaseModel):

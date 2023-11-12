@@ -13,7 +13,7 @@ from ..schemas.apartment import (
     ApartmentUpdateSchema,
     ApartmentCreateSchte,
 )
-from ..helpers.upload import upload_file, delete_file_upload, upload_files
+from ..helpers.upload import delete_file_upload, upload_files
 from typing import List
 import uuid
 import logging
@@ -32,11 +32,11 @@ class ApartmentService:
         apartments = self.db.query(Apartment).all()
         return apartments
 
-    async def get_apartment_by_room(
-        self, userId: str | None = None, room: int | None = None
+    async def get_apartment_by_apartment_id(
+        self, apartment_id: str | None = None
     ) -> ApartmentSchema:
         apartmentQuery = self.db.query(Apartment)
-        found_apartment = apartmentQuery.filter(Apartment.room == room).first()
+        found_apartment = apartmentQuery.filter(Apartment.id == apartment_id).first()
 
         return found_apartment
 
@@ -190,16 +190,16 @@ class ApartmentService:
 
         return found_apartment
 
-    async def delete(self, room: str):
-        found_apartment_query = await self.get_apartment_by_room(room=room)
+    async def delete(self, apartment_id: str):
+        found_apartment_query = await self.get_apartment_by_apartment_id(apartment_id)
 
         if not found_apartment_query:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="Apartment not found!!"
             )
 
-        delete_file_upload("data/banner/apartment", room)
+        delete_file_upload("data/banner/apartment", apartment_id)
 
         self.db.delete(found_apartment_query)
         self.db.commit()
-        return {"message": f"Xoá phòng: {room} thành công."}
+        return {"message": f"Xoá phòng: {apartment_id} thành công."}

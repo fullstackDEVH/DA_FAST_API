@@ -15,6 +15,8 @@ from sqlalchemy import (
     Table,
 )
 from sqlalchemy.orm import relationship
+from sqlalchemy.dialects.postgresql import ENUM as pgEnum
+from enum import Enum
 
 DATABASE_URL = "postgresql://admin:admin@localhost:5432/DoAn_Apartment"
 
@@ -33,6 +35,12 @@ def get_db():
         db.close()
 
 
+class UserRole(Enum):
+    RENTER = "RENTER"
+    MANAGER = "MANAGER"
+    ADMIN = "ADMIN"
+
+
 class User(Base):
     __tablename__ = "user"
 
@@ -44,6 +52,7 @@ class User(Base):
     avatar = Column(String(255))
     isVerify = Column(Boolean, default=False)
     verification_code = Column(String(255), unique=True)
+    system_role = Column(String(52))
     created_at = Column(TIMESTAMP(timezone=True), server_default=text("now()"))
     updated_at = Column(
         TIMESTAMP(timezone=True),
@@ -63,6 +72,8 @@ class Contract(Base):
     content = Column(TEXT)
     start_date = Column(TIMESTAMP(timezone=True))
     end_date = Column(TIMESTAMP(timezone=True))
+    total_amount = Column(Integer, nullable=False, default=0)
+    num_of_people = Column(Integer, nullable=False, default=0)
 
     apartment_id = Column(
         String(255), ForeignKey("apartment.id", ondelete="CASCADE"), nullable=False
@@ -111,6 +122,20 @@ class Apartment(Base):
         "Amenity", secondary=apartment_amenity, back_populates="apartments"
     )
     images = relationship("ApartmentImage", back_populates="apartment")
+    comments = relationship("ApartmentComment", back_populates="apartment")
+
+
+class ApartmentComment(Base):
+    __tablename__ = "apartment_comment"
+
+    id = Column(String(255), primary_key=True)
+    user_id = Column(String(255), ForeignKey("user.id"), nullable=False)
+    apartment_id = Column(String(255), ForeignKey("apartment.id"), nullable=False)
+    text = Column(String(255), nullable=False)
+    created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
+
+    user = relationship("User")  # replace 'User' with the actual User class
+    apartment = relationship("Apartment", back_populates="comments")
 
 
 class ApartmentImage(Base):
