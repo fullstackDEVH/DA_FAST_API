@@ -49,7 +49,7 @@ def delete_file_upload(folder_path: str, file_name: str):
 
 
 async def upload_files(
-    folder_name: str, allowed_image_types: set, files: list[UploadFile]
+    folder_name: str, allowed_image_types: set, files: list[UploadFile], endpoint: str
 ):
     try:
         uploaded_images = []
@@ -71,7 +71,7 @@ async def upload_files(
             with open(image_path, "wb") as f:
                 f.write(file_upload.file.read())
 
-            uploaded_images.append(image_path)
+            uploaded_images.append(f"{endpoint}/{str(index)}")
             print(f"image_path : {image_path}")
 
         return uploaded_images

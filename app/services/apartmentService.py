@@ -7,6 +7,7 @@ from ..database import (
     Amenity,
     apartment_amenity,
     ApartmentImage,
+    ApartmentImage,
 )
 from ..schemas.apartment import (
     ApartmentSchema,
@@ -29,7 +30,9 @@ class ApartmentService:
         self.db = db
 
     async def gets_all(self):
-        apartments = self.db.query(Apartment).all()
+        apartments = (
+            self.db.query(Apartment).options(joinedload(Apartment.images)).all()
+        )
         return apartments
 
     async def get_apartment_by_apartment_id(
@@ -50,6 +53,7 @@ class ApartmentService:
             self.db.query(Apartment)
             .filter_by(id=apartment_id)
             .options(
+                joinedload(Apartment.images),
                 joinedload(Apartment.apartment_contract),  # Lấy thông tin hợp đồng
                 joinedload(Apartment.apartment_tags).joinedload(
                     ApartmentTag.tag
@@ -60,18 +64,18 @@ class ApartmentService:
         )
 
         # Kiểm tra xem căn hộ có tồn tại không
-        if apartment is not None:
-            # In ra thông tin của căn hộ
-            print("Tên căn hộ:", apartment.name)
-            print("Mô tả:", apartment.desc)
-            print("Hợp đồng:", apartment.apartment_contract)
-            print(
-                "Thẻ:",
-                [apartment_tag.tag.name for apartment_tag in apartment.apartment_tags],
-            )
-            print("Tiện nghi:", [amenity.name for amenity in apartment.amenities])
-        else:
-            print("Căn hộ không tồn tại")
+        # if apartment is not None:
+        #     # In ra thông tin của căn hộ
+        #     print("Tên căn hộ:", apartment.name)
+        #     print("Mô tả:", apartment.desc)
+        #     print("Hợp đồng:", apartment.apartment_contract)
+        #     print(
+        #         "Thẻ:",
+        #         [apartment_tag.tag.name for apartment_tag in apartment.apartment_tags],
+        #     )
+        #     print("Tiện nghi:", [amenity.name for amenity in apartment.amenities])
+        # else:
+        #     print("Căn hộ không tồn tại")
 
         # tags_in_apartment = [
         #     apartment_tag.tag.name for apartment_tag in found_apartment.apartment_tags
@@ -81,7 +85,7 @@ class ApartmentService:
 
     async def create_apartment(self, apartment: ApartmentCreateSchte):
         apartment_create = Apartment(
-            id=uuid.uuid4(),
+            id=str(uuid.uuid4()),
             name=apartment.name,
             desc=apartment.desc,
             price_per_day=apartment.price_per_day,
@@ -97,7 +101,7 @@ class ApartmentService:
 
         for tag_id in apartment.tag_ids[0].split(","):
             apartment_tag = ApartmentTag(
-                id=uuid.uuid4(), apartment_id=apartment_create.id, tag_id=tag_id
+                id=str(uuid.uuid4()), apartment_id=apartment_create.id, tag_id=tag_id
             )
             apartment_tags.append(apartment_tag)
 
@@ -113,15 +117,17 @@ class ApartmentService:
 
         self.db.add(apartment_create)
         self.db.commit()
+        self.db.refresh(apartment_create)
 
         return apartment_create
 
     async def upload_images(self, apartment_id: str, images: list[UploadFile]):
         try:
             uploaded_images = await upload_files(
-                folder_name=f"data/banner/apartment/{apartment_id}",
+                folder_name=f"data/banner/apartments/{apartment_id}",
                 allowed_image_types={"image/png", "image/jpeg"},
                 files=images,
+                endpoint=f"apartments/{apartment_id}/banner",
             )
 
             for image_path in uploaded_images:
@@ -161,9 +167,9 @@ class ApartmentService:
     async def gets_apartment_by_tag_id(self, tag_id: str | None):
         apartments_with_tag = (
             self.db.query(Apartment)
-            .join(Apartment.apartment_tags)
-            .join(ApartmentTag.tag)
-            .filter(Tag.id == tag_id)
+            .join(Apartment.apartment_tags)  # Joins để lấy các căn hộ có tagId cụ thể
+            .filter(ApartmentTag.tag_id == tag_id)
+            .options(joinedload(Apartment.images))
             .all()
         )
 

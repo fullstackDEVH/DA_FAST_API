@@ -32,12 +32,11 @@ async def get_apartments(
 
 
 @router.get("/", status_code=status.HTTP_200_OK)
-async def get_apartment_by_room(
-    room: str | None = None,
-    userId: str | None = None,
+async def get_apartment_detail_by_id(
+    apartment_id: str | None = None,
     apartmentService: ApartmentService = Depends(get_apartment_service),
 ):
-    response = await apartmentService.get_apartment_by_room(userId, room)
+    response = await apartmentService.get_apartment_by_apartment_id(apartment_id)
     return make_response_object(response)
 
 
@@ -62,11 +61,13 @@ async def get_apartment_by_id(
     return make_response_object(response)
 
 
-@router.get("/{room}/banner")
-async def get_file(room: str):
+@router.get("/{apartment_id}/banner/{index}")
+async def get_file(apartment_id: str, index: int):
     # Đường dẫn đến tệp ảnh
-    folder_banner_apartment = os.path.join("data/banner/apartment")
-    path_banner_apartment = os.path.join(folder_banner_apartment, room)
+    folder_banner_apartment = os.path.join("data/banner/apartments")
+    path_banner_apartment = os.path.join(
+        folder_banner_apartment, f"{apartment_id}/{index}"
+    )
 
     if not os.path.exists(path_banner_apartment):
         return {"message": "File not found"}
@@ -81,7 +82,7 @@ async def create_apartment(
 ):
     response = await apartmentService.create_apartment(apartment)
 
-    return make_response_object(response)
+    return response
 
 
 @router.post("/upload/{apartment_id}", status_code=status.HTTP_201_CREATED)

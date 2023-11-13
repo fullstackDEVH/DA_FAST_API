@@ -125,14 +125,14 @@ class UserService:
         if not found_user:
             raise HTTPException(status_code=404, detail="User not found")
 
-        pathName = upload_file(
+        upload_file(
             folder_name=f"data/avatar/users",
             allowed_image_types=["image/png", "image/jpeg", "image/jpg"],
             endpoint_path=user_id,
             file_upload=avatar,
         )
 
-        found_user.avatar = pathName
+        found_user.avatar = f"users/{user_id}/avatar"
         self.db.commit()
         return found_user
 
