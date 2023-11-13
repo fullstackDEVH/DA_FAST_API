@@ -56,7 +56,7 @@ async def create_contract(
     contractService: ContractService = Depends(get_contract_service),
 ):
     response = await contractService.create(contract)
-    return make_response_object(response)
+    return response
 
 
 @router.patch("/{contract_id}", status_code=status.HTTP_200_OK)

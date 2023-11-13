@@ -59,19 +59,19 @@ class ContractService:
         if found_contract:
             raise HTTPException(status_code=400, detail="Contract is exist !!")
 
-        contract_create = self.db.add(
-            Contract(
-                id=uuid.uuid4(),
-                content=contract.content,
-                start_date=contract.start_date,
-                end_date=contract.end_date,
-                apartment_id=contract.apartment_id,
-                user_id=contract.user_id,
-                total_amount=contract.total_amount,
-                num_of_people=contract.num_of_people,
-            )
+        contract_create = Contract(
+            id=str(uuid.uuid4()),
+            content=contract.content,
+            start_date=contract.start_date,
+            end_date=contract.end_date,
+            apartment_id=contract.apartment_id,
+            user_id=contract.user_id,
+            total_amount=contract.total_amount,
+            num_of_people=contract.num_of_people,
         )
+        self.db.add(contract_create)
         self.db.commit()
+        self.db.refresh(contract_create)
 
         return contract_create
 

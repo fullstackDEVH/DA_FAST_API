@@ -133,6 +133,10 @@ class ApartmentComment(Base):
     apartment_id = Column(String(255), ForeignKey("apartment.id"), nullable=False)
     text = Column(String(255), nullable=False)
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
+    rate_location = Column(Integer, nullable=False)
+    rate_amenities = Column(Integer, nullable=False)
+    rate_interior = Column(Integer, nullable=False)
+    rate_price = Column(Integer, nullable=False)
 
     user = relationship("User")  # replace 'User' with the actual User class
     apartment = relationship("Apartment", back_populates="comments")
