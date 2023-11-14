@@ -85,7 +85,7 @@ async def create_apartment(
     return response
 
 
-@router.post("/upload/{apartment_id}", status_code=status.HTTP_201_CREATED)
+@router.patch("/upload/{apartment_id}", status_code=status.HTTP_201_CREATED)
 async def upload_images_apartment(
     apartment_id: str,
     images: list[UploadFile] = File(...),

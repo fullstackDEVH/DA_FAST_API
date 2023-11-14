@@ -197,15 +197,23 @@ class ApartmentService:
         return found_apartment
 
     async def delete(self, apartment_id: str):
-        found_apartment_query = await self.get_apartment_by_apartment_id(apartment_id)
+        apartmentQuery = self.db.query(Apartment)
+        found_apartment = (
+            apartmentQuery.filter(Apartment.id == apartment_id)
+            .options(joinedload(Apartment.images))
+            .first()
+        )
 
-        if not found_apartment_query:
+        if not found_apartment:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="Apartment not found!!"
             )
 
-        delete_file_upload("data/banner/apartment", apartment_id)
+        for image in found_apartment.images:
+            print(image.id)
 
-        self.db.delete(found_apartment_query)
+        # delete_file_upload("data/banner/apartment", apartment_id)
+
+        self.db.delete(found_apartment)
         self.db.commit()
         return {"message": f"Xoá phòng: {apartment_id} thành công."}
