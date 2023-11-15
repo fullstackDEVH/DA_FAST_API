@@ -209,10 +209,10 @@ class ApartmentService:
                 status_code=status.HTTP_404_NOT_FOUND, detail="Apartment not found!!"
             )
 
-        for image in found_apartment.images:
-            print(image.id)
-
-        # delete_file_upload("data/banner/apartment", apartment_id)
+        total_imgs = len(found_apartment.images)
+        if total_imgs > 0:
+            for index, image in enumerate(found_apartment.images):
+                delete_file_upload(f"data/banner/apartments/{apartment_id}", str(index))
 
         self.db.delete(found_apartment)
         self.db.commit()
