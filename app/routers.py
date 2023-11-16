@@ -8,6 +8,7 @@ from .enpoints import (
     tag,
     amenity,
     apartmentComment,
+    statistical,
 )
 from .socket import router as socket_router
 
@@ -22,6 +23,8 @@ router.include_router(amenity.router, prefix="/amenities", tags=["amenities"])
 router.include_router(
     apartmentComment.router, prefix="/apartmentComment", tags=["apartmentComment"]
 )
+router.include_router(statistical.router, prefix="/statisticals", tags=["statisticals"])
+
 router.include_router(
     notication.router, prefix="/notifications", tags=["notifications"]
 )

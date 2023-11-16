@@ -74,6 +74,7 @@ class Contract(Base):
     end_date = Column(TIMESTAMP(timezone=True))
     total_amount = Column(Integer, nullable=False, default=0)
     num_of_people = Column(Integer, nullable=False, default=0)
+    created_at = Column(TIMESTAMP(timezone=True), server_default=text("now()"))
 
     apartment_id = Column(
         String(255), ForeignKey("apartment.id", ondelete="CASCADE"), nullable=False
