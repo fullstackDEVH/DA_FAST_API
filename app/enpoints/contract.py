@@ -33,6 +33,14 @@ async def get_contract(
     return make_response_object(response)
 
 
+@router.get("/latest", status_code=status.HTTP_200_OK)
+async def get_contract(
+    contractService: ContractService = Depends(get_contract_service),
+):
+    response = await contractService.get_contract_latest()
+    return make_response_object(response)
+
+
 @router.get("/all", status_code=status.HTTP_200_OK)
 async def get_contracts(
     contractService: ContractService = Depends(get_contract_service),

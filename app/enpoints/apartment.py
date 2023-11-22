@@ -65,14 +65,15 @@ async def get_apartment_by_id(
 async def get_file(apartment_id: str, index: int):
     # Đường dẫn đến tệp ảnh
     folder_banner_apartment = os.path.join("data/banner/apartments")
-    path_banner_apartment = os.path.join(
-        folder_banner_apartment, f"{apartment_id}/{index}"
-    )
+    path_banner_apartment = os.path.join(folder_banner_apartment, apartment_id)
+    endpoint_banner_apartment = os.path.join(path_banner_apartment, str(index))
 
-    if not os.path.exists(path_banner_apartment):
+    print(f"path_banner_apartment : {endpoint_banner_apartment}")
+
+    if not os.path.exists(endpoint_banner_apartment):
         return {"message": "File not found"}
 
-    return FileResponse(path_banner_apartment)
+    return FileResponse(endpoint_banner_apartment)
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
@@ -81,7 +82,6 @@ async def create_apartment(
     apartmentService: ApartmentService = Depends(get_apartment_service),
 ):
     response = await apartmentService.create_apartment(apartment)
-
     return response
 
 

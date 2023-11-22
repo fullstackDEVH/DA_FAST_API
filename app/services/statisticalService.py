@@ -145,4 +145,5 @@ class Statistical:
             # Thêm từ điển vào danh sách kết quả
             result_list.append(result_dict)
 
+        result_list.reverse()
         return result_list

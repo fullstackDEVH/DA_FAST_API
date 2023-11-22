@@ -1,5 +1,5 @@
 from fastapi import HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from ..schemas.contract import (
     CreateContractSchema,
     TYPE_CONTRACT_ID,
@@ -8,6 +8,7 @@ from ..schemas.contract import (
 from ..database import Contract, User, Apartment
 from enum import Enum
 import uuid
+from sqlalchemy import desc
 
 
 class TYPE_CONTRACT_ID(str, Enum):
@@ -36,7 +37,27 @@ class ContractService:
         return {"contract": contract, "owner": user, "apartment": apartment}
 
     async def get_contracts(self):
-        return self.db.query(Contract).all()
+        return (
+            self.db.query(Contract)
+            .order_by(desc(Contract.created_at))
+            .options(
+                joinedload(Contract.user),
+                joinedload(Contract.apartment).options(joinedload(Apartment.images)),
+            )
+            .all()
+        )
+
+    async def get_contract_latest(self):
+        return (
+            self.db.query(Contract)
+            .order_by(desc(Contract.created_at))
+            .limit(6)
+            .options(
+                joinedload(Contract.user),
+                joinedload(Contract.apartment).options(joinedload(Apartment.images)),
+            )
+            .all()
+        )
 
     async def get_contract_by_id(self, type_id: TYPE_CONTRACT_ID, id: str):
         if type_id == TYPE_CONTRACT_ID.USER_ID:

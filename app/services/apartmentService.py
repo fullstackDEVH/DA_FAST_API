@@ -46,13 +46,11 @@ class ApartmentService:
     async def get_apartment_by_id(
         self, apartment_id: str | None = None
     ) -> ApartmentSchema:
-        found_apartment = (
-            self.db.query(Apartment).filter(Apartment.id == apartment_id).first()
-        )
         apartment = (
             self.db.query(Apartment)
             .filter_by(id=apartment_id)
             .options(
+                joinedload(Apartment.comments),
                 joinedload(Apartment.images),
                 joinedload(Apartment.apartment_contract),  # Lấy thông tin hợp đồng
                 joinedload(Apartment.apartment_tags).joinedload(
@@ -63,25 +61,23 @@ class ApartmentService:
             .first()
         )
 
-        # Kiểm tra xem căn hộ có tồn tại không
-        # if apartment is not None:
-        #     # In ra thông tin của căn hộ
-        #     print("Tên căn hộ:", apartment.name)
-        #     print("Mô tả:", apartment.desc)
-        #     print("Hợp đồng:", apartment.apartment_contract)
-        #     print(
-        #         "Thẻ:",
-        #         [apartment_tag.tag.name for apartment_tag in apartment.apartment_tags],
-        #     )
-        #     print("Tiện nghi:", [amenity.name for amenity in apartment.amenities])
-        # else:
-        #     print("Căn hộ không tồn tại")
+        total_rating = 0
 
-        # tags_in_apartment = [
-        #     apartment_tag.tag.name for apartment_tag in found_apartment.apartment_tags
-        # ]
+        if len(apartment.comments) > 0:
+            for comment in apartment.comments:
+                total_rating += (
+                    comment.rate_location
+                    + comment.rate_interior
+                    + comment.rate_amenities
+                    + comment.rate_price
+                ) / 5
 
-        return found_apartment
+            total_rating = round(total_rating / len(apartment.comments), 1)
+
+        apartment.comments.clear()
+        apartment.total_rating = total_rating
+
+        return apartment
 
     async def create_apartment(self, apartment: ApartmentCreateSchte):
         apartment_create = Apartment(
