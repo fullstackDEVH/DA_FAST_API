@@ -134,6 +134,7 @@ class UserService:
 
         found_user.avatar = f"users/{user_id}/avatar"
         self.db.commit()
+
         return found_user
 
     async def update_user(self, user_id: str, user_update: user.UserUpdateSchema):

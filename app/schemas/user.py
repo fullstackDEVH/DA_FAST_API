@@ -30,6 +30,7 @@ class UserCreateSchema(BaseModel):
 
 
 class UserUpdateSchema(BaseModel):
+    address: str | None = None
     phonenumber: str | None = None
     username: str | None = None
     password: str | None = None

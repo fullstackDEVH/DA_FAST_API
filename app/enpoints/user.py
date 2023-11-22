@@ -103,7 +103,7 @@ async def update_avatar(
     return make_response_object(response)
 
 
-@router.patch("/update_user/{user_id}", status_code=status.HTTP_201_CREATED)
+@router.patch("/update_user/{user_id}", status_code=status.HTTP_200_OK)
 async def update_user(
     user_id: str,
     user_update: UserUpdateSchema,

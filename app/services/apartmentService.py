@@ -95,6 +95,7 @@ class ApartmentService:
             num_toilets=apartment.num_toilets,
             total_people=apartment.total_people,
             rate=apartment.rate,
+            address=apartment.address,
         )
 
         apartment_tags = []

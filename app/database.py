@@ -51,6 +51,7 @@ class User(Base):
     password = Column(String(255))
     avatar = Column(String(255))
     isVerify = Column(Boolean, default=False)
+    address = Column(String(255))
     verification_code = Column(String(255), unique=True)
     system_role = Column(String(52))
     created_at = Column(TIMESTAMP(timezone=True), server_default=text("now()"))
@@ -101,6 +102,7 @@ class Apartment(Base):
     id = Column(String(255), primary_key=True)
     name = Column(String(42), nullable=False, index=True)
     desc = Column(String(255))
+    address = Column(String(255))
     created_at = Column(TIMESTAMP(timezone=True), server_default=text("now()"))
     updated_at = Column(
         TIMESTAMP(timezone=True),

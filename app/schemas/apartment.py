@@ -24,6 +24,7 @@ class ApartmentUpdateSchema(BaseModel):
     num_living_rooms: str | None = None
     num_bathrooms: str | None = None
     num_toilets: str | None = None
+    address: str | None = None
 
 
 class ApartmentCreateSchte(BaseModel):
@@ -38,3 +39,4 @@ class ApartmentCreateSchte(BaseModel):
     total_people: int
     tag_ids: list[str]
     amenities: list[str]
+    address: str
