@@ -1,9 +1,14 @@
-from fastapi import APIRouter, Depends, status, UploadFile, Form, File, Path
+from fastapi import APIRouter, Depends, status, UploadFile, Form, File, Path, Query
 from typing import Annotated, List
 from ..database import get_db, Apartment
 from pydantic import BaseModel, UUID4
 from sqlalchemy.orm import Session
-from ..schemas.apartment import ApartmentUpdateSchema, ApartmentCreateSchte
+from ..schemas.apartment import (
+    ApartmentUpdateSchema,
+    ApartmentCreateSchte,
+    ApartmentType,
+    ApartmentCity
+)
 from ..helpers.oauth2 import JWTBearer
 from ..services.apartmentService import ApartmentService
 from ..helpers.response import make_response_object
@@ -42,13 +47,36 @@ async def get_apartment_detail_by_id(
 
 @router.get("/tag", status_code=status.HTTP_200_OK)
 async def gets_apartment_by_tag_id(
-    tag_id: str | None = None,
+    tag_id: str = None,
+    city: ApartmentCity = None,
+    lowest_price: int = None,
+    hightest_price: int = None,
+    apartment_type: ApartmentType = None,
+    amenities: list = Query(
+        None, title="Amenity Names", description="List of amenity names"
+    ),
     apartmentService: ApartmentService = Depends(get_apartment_service),
 ):
+    argsKwg = {
+        "city": city,
+        "lowest_price": lowest_price,
+        "hightest_price": hightest_price,
+        "apartment_type": apartment_type,
+        "amenities" : amenities
+    }
+
+    print(f"tag_id : {tag_id}")
+
     if tag_id is not None:
-        response = await apartmentService.gets_apartment_by_tag_id(tag_id)
+        response = await apartmentService.gets_apartment_by_tag_id(
+            tag_id=tag_id, **argsKwg
+        )
+        print("city")
+
     else:
         response = await apartmentService.gets_all()
+        print("city2")
+
     return make_response_object(response)
 
 

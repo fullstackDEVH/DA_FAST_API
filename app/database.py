@@ -110,12 +110,12 @@ class Apartment(Base):
         server_default=text("now()"),
         onupdate=func.current_timestamp(),
     )
+    city = Column(String(255))
+    apartment_type = Column(String(255))
     price_per_day = Column(Integer, nullable=False)
     num_bedrooms = Column(Integer, nullable=False)
     num_living_rooms = Column(Integer, nullable=False)
     num_bathrooms = Column(Integer, nullable=False)
-    num_toilets = Column(Integer, nullable=False)
-    rate = Column(Integer, nullable=False)
     total_people = Column(Integer, nullable=False)
 
     # Tạo mối quan hệ với bảng User
