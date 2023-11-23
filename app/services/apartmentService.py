@@ -88,10 +88,10 @@ class ApartmentService:
             num_bedrooms=apartment.num_bedrooms,
             num_living_rooms=apartment.num_living_rooms,
             num_bathrooms=apartment.num_bathrooms,
-            num_toilets=apartment.num_toilets,
             total_people=apartment.total_people,
-            rate=apartment.rate,
             address=apartment.address,
+            city=apartment.city,
+            apartment_type=apartment.apartment_type,
         )
 
         apartment_tags = []
@@ -161,11 +161,36 @@ class ApartmentService:
             )
         return found_user
 
-    async def gets_apartment_by_tag_id(self, tag_id: str | None):
+    async def gets_apartment_by_tag_id(self, tag_id: str | None, **argsKw):
+        amenities = argsKw.get("amenities")
+        city = argsKw.get("city")
+        lowest_price = argsKw.get("lowest_price")
+        hightest_price = argsKw.get("hightest_price")
+        apartment_type = argsKw.get("apartment_type")
+
+        filters = []
+
+        filters.append(ApartmentTag.tag_id == tag_id)
+
+        if lowest_price and hightest_price:
+            filters.append(
+                Apartment.price_per_day.between(lowest_price, hightest_price)
+            )
+
+
+        if city:
+            filters.append(Apartment.city == city)
+
+        if apartment_type:
+            filters.append(Apartment.apartment_type == apartment_type)
+
+        if amenities:
+            filters.append(Apartment.amenities.any(Amenity.name.in_(amenities)))
+
         apartments_with_tag = (
             self.db.query(Apartment)
             .join(Apartment.apartment_tags)  # Joins để lấy các căn hộ có tagId cụ thể
-            .filter(ApartmentTag.tag_id == tag_id)
+            .filter(*filters)
             .options(joinedload(Apartment.images))
             .all()
         )

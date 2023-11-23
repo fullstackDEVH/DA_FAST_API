@@ -61,7 +61,12 @@ class ContractService:
 
     async def get_contract_by_id(self, type_id: TYPE_CONTRACT_ID, id: str):
         if type_id == TYPE_CONTRACT_ID.USER_ID:
-            return self.db.query(Contract).filter(Contract.user_id == id).first()
+            return (
+                self.db.query(Contract)
+                .filter(Contract.user_id == id)
+                .options(joinedload(Contract.apartment).joinedload(Apartment.images))
+                .all()
+            )
         elif type_id == TYPE_CONTRACT_ID.APARTMENT_ID:
             return self.db.query(Contract).filter(Contract.apartment_id == id).first()
 

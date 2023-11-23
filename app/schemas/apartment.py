@@ -1,6 +1,22 @@
 from pydantic import BaseModel, EmailStr, Field
 from fastapi import UploadFile, Form, File
 from typing import Annotated
+from enum import Enum
+
+
+class ApartmentType(str, Enum):
+    STUDIO = "STUDIO"
+    HOUSE = "HOUSE"
+    CONDO = "CONDO"
+
+
+class ApartmentCity(str, Enum):
+    HCM = "HCM"
+    ĐN = "ĐN"
+    NT = "NT"
+    HA = "HA"
+    HUE = "HUE"
+    DL = "DL"
 
 
 class ApartmentSchema(BaseModel):
@@ -23,20 +39,21 @@ class ApartmentUpdateSchema(BaseModel):
     num_bedrooms: str | None = None
     num_living_rooms: str | None = None
     num_bathrooms: str | None = None
-    num_toilets: str | None = None
+    city: str | None = None
     address: str | None = None
+    apartment_type: str | None = None
 
 
 class ApartmentCreateSchte(BaseModel):
     name: str
     desc: str
+    city: str
     price_per_day: int
     num_bedrooms: int
     num_living_rooms: int
     num_bathrooms: int
-    num_toilets: int
-    rate: int
     total_people: int
     tag_ids: list[str]
     amenities: list[str]
     address: str
+    apartment_type: ApartmentType
