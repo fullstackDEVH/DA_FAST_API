@@ -29,10 +29,53 @@ class ApartmentService:
     def __init__(self, db: Session):
         self.db = db
 
-    async def gets_all(self):
+    async def gets_all(self, **argsKwg):
+        amenities = argsKwg.get("amenities")
+        city = argsKwg.get("city")
+        lowest_price = argsKwg.get("lowest_price")
+        hightest_price = argsKwg.get("hightest_price")
+        apartment_type = argsKwg.get("apartment_type")
+
+        filters = []
+
+        if lowest_price is not None and hightest_price is not None:
+            filters.append(
+                Apartment.price_per_day.between(lowest_price, hightest_price)
+            )
+
+        if city:
+            filters.append(Apartment.city == city)
+
+        if apartment_type:
+            filters.append(Apartment.apartment_type == apartment_type)
+
+        if amenities:
+            filters.append(Apartment.amenities.any(Amenity.name.in_(amenities)))
+
         apartments = (
-            self.db.query(Apartment).options(joinedload(Apartment.images)).all()
+            self.db.query(Apartment)
+            .filter(*filters)
+            .options(joinedload(Apartment.images), joinedload(Apartment.comments))
+            .all()
         )
+
+        for apartment in apartments:
+            if len(apartment.comments) < 1:
+                apartment.total_rating = 0
+            else:
+                total_rating_in_comment = 0
+                for comment in apartment.comments:
+                    total_rating_in_comment += (
+                        comment.rate_location
+                        + comment.rate_interior
+                        + comment.rate_amenities
+                        + comment.rate_price
+                    ) / 5
+
+                apartment.total_rating = round(
+                    (total_rating_in_comment / len(apartment.comments)), 1
+                )
+
         return apartments
 
     async def get_apartment_by_apartment_id(
@@ -71,6 +114,7 @@ class ApartmentService:
                     + comment.rate_amenities
                     + comment.rate_price
                 ) / 5
+                comment.total_rating = total_rating
 
             total_rating = round(total_rating / len(apartment.comments), 1)
 
@@ -177,7 +221,6 @@ class ApartmentService:
                 Apartment.price_per_day.between(lowest_price, hightest_price)
             )
 
-
         if city:
             filters.append(Apartment.city == city)
 
@@ -191,9 +234,27 @@ class ApartmentService:
             self.db.query(Apartment)
             .join(Apartment.apartment_tags)  # Joins để lấy các căn hộ có tagId cụ thể
             .filter(*filters)
-            .options(joinedload(Apartment.images))
+            .options(joinedload(Apartment.images), joinedload(Apartment.comments))
             .all()
         )
+
+        for apartment in apartments_with_tag:
+            total_rating_in_comment = 0
+
+            if len(apartment.comments) < 1:
+                apartment.total_rating = 0
+            else:
+                for comment in apartment.comments:
+                    total_rating_in_comment += (
+                        comment.rate_location
+                        + comment.rate_interior
+                        + comment.rate_amenities
+                        + comment.rate_price
+                    ) / 5
+
+                apartment.total_rating = round(
+                    total_rating_in_comment / len(apartment.comments), 1
+                )
 
         return apartments_with_tag
 

@@ -25,7 +25,7 @@ def get_user_service(db: Session = Depends(get_db)):
 async def get_users(
     username: str | None = None,
     userService: UserService = Depends(get_user_service),
-    access_token=Depends(JWTBearer()),
+    # access_token=Depends(JWTBearer()),
 ):
     response = await userService.gets()
     return make_response_object(response)

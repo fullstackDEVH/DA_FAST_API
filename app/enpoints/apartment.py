@@ -65,17 +65,12 @@ async def gets_apartment_by_tag_id(
         "amenities" : amenities
     }
 
-    print(f"tag_id : {tag_id}")
-
     if tag_id is not None:
         response = await apartmentService.gets_apartment_by_tag_id(
             tag_id=tag_id, **argsKwg
         )
-        print("city")
-
     else:
-        response = await apartmentService.gets_all()
-        print("city2")
+        response = await apartmentService.gets_all(**argsKwg)
 
     return make_response_object(response)
 

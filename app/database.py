@@ -101,7 +101,7 @@ class Apartment(Base):
 
     id = Column(String(255), primary_key=True)
     name = Column(String(42), nullable=False, index=True)
-    desc = Column(String(255))
+    desc = Column(TEXT)
     address = Column(String(255))
     created_at = Column(TIMESTAMP(timezone=True), server_default=text("now()"))
     updated_at = Column(
@@ -134,7 +134,7 @@ class ApartmentComment(Base):
     id = Column(String(255), primary_key=True)
     user_id = Column(String(255), ForeignKey("user.id"), nullable=False)
     apartment_id = Column(String(255), ForeignKey("apartment.id"), nullable=False)
-    text = Column(String(255), nullable=False)
+    text = Column(TEXT)
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
     rate_location = Column(Integer, nullable=False)
     rate_amenities = Column(Integer, nullable=False)
