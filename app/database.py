@@ -64,6 +64,8 @@ class User(Base):
 
     user_contract = relationship("Contract", back_populates="user")
     user_bill = relationship("Bill", back_populates="user")
+    messages = relationship("Message", back_populates="user")
+    rooms = relationship("MembersRoom", back_populates="user")
 
 
 class Contract(Base):
@@ -238,3 +240,61 @@ class Amenity(Base):
     apartments = relationship(
         "Apartment", secondary=apartment_amenity, back_populates="amenities"
     )
+
+
+class Message(Base):
+    __tablename__ = "message"
+
+    id = Column(String(255), primary_key=True)
+    sender_id = Column(String(255), ForeignKey("user.id", ondelete="CASCADE"))
+    room_id = Column(String(255), ForeignKey("room.id", ondelete="CASCADE"))
+    content = Column(TEXT)
+
+    created_at = Column(TIMESTAMP(timezone=True), server_default=text("now()"))
+    updated_at = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        server_default=text("now()"),
+        onupdate=func.current_timestamp(),
+    )
+
+    room = relationship("Room", back_populates="messages")
+    user = relationship("User", back_populates="messages")
+
+
+class MembersRoom(Base):
+    __tablename__ = "members_room"
+
+    id = Column(String(255), primary_key=True)
+    user_id = Column(String(255), ForeignKey("user.id", ondelete="CASCADE"))
+    room_id = Column(String(255), ForeignKey("room.id", ondelete="CASCADE"))
+
+    created_at = Column(TIMESTAMP(timezone=True), server_default=text("now()"))
+    updated_at = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        server_default=text("now()"),
+        onupdate=func.current_timestamp(),
+    )
+
+    room = relationship("Room", back_populates="members")
+    user = relationship("User", back_populates="rooms")
+
+
+class Room(Base):
+    __tablename__ = "room"
+
+    id = Column(String(255), primary_key=True)
+    name = Column(String(255))
+    key = Column(String(255))
+
+    created_at = Column(TIMESTAMP(timezone=True), server_default=text("now()"))
+    updated_at = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        server_default=text("now()"),
+        onupdate=func.current_timestamp(),
+    )
+
+    messages = relationship("Message", back_populates="room")
+    members = relationship("MembersRoom", back_populates="room")
