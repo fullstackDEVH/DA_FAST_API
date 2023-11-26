@@ -77,12 +77,8 @@ class Contract(Base):
     num_of_people = Column(Integer, nullable=False, default=0)
     created_at = Column(TIMESTAMP(timezone=True), server_default=text("now()"))
 
-    apartment_id = Column(
-        String(255), ForeignKey("apartment.id", ondelete="CASCADE"), nullable=False
-    )
-    user_id = Column(
-        String(255), ForeignKey("user.id", ondelete="CASCADE"), nullable=False
-    )
+    apartment_id = Column(String(255), ForeignKey("apartment.id", ondelete="CASCADE"))
+    user_id = Column(String(255), ForeignKey("user.id", ondelete="CASCADE"))
 
     apartment = relationship("Apartment", back_populates="apartment_contract")
     user = relationship("User", back_populates="user_contract")
@@ -132,8 +128,8 @@ class ApartmentComment(Base):
     __tablename__ = "apartment_comment"
 
     id = Column(String(255), primary_key=True)
-    user_id = Column(String(255), ForeignKey("user.id"), nullable=False)
-    apartment_id = Column(String(255), ForeignKey("apartment.id"), nullable=False)
+    user_id = Column(String(255), ForeignKey("user.id", ondelete="CASCADE"))
+    apartment_id = Column(String(255), ForeignKey("apartment.id", ondelete="CASCADE"))
     text = Column(TEXT)
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
     rate_location = Column(Integer, nullable=False)
@@ -148,9 +144,7 @@ class ApartmentComment(Base):
 class ApartmentImage(Base):
     __tablename__ = "apartment_image"
     id = Column(String(255), primary_key=True)
-    apartment_id = Column(
-        String(255), ForeignKey("apartment.id", ondelete="CASCADE"), nullable=False
-    )
+    apartment_id = Column(String(255), ForeignKey("apartment.id", ondelete="CASCADE"))
     image_url = Column(String(255), nullable=False)
     created_at = Column(TIMESTAMP(timezone=True), server_default=text("now()"))
 

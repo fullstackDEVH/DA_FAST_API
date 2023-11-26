@@ -49,13 +49,17 @@ class ApartmentService:
         if apartment_type:
             filters.append(Apartment.apartment_type == apartment_type)
 
-        if amenities:
+        if amenities and "" not in amenities and len(amenities) > 0:
+            print(amenities)
             filters.append(Apartment.amenities.any(Amenity.name.in_(amenities)))
 
         apartments = (
             self.db.query(Apartment)
             .filter(*filters)
-            .options(joinedload(Apartment.images), joinedload(Apartment.comments))
+            .options(
+                joinedload(Apartment.images),
+                joinedload(Apartment.comments),
+            )
             .all()
         )
 
@@ -140,7 +144,8 @@ class ApartmentService:
 
         apartment_tags = []
 
-        for tag_id in apartment.tag_ids[0].split(","):
+        for tag_id in apartment.tag_ids:
+            print(f"tag_id : {tag_id}")
             apartment_tag = ApartmentTag(
                 id=str(uuid.uuid4()), apartment_id=apartment_create.id, tag_id=tag_id
             )
@@ -149,7 +154,7 @@ class ApartmentService:
         apartment_create.apartment_tags = apartment_tags
 
         amenities = []
-        for amenity_id in apartment.amenities[0].split(","):
+        for amenity_id in apartment.amenities:
             amenity = self.db.query(Amenity).filter(Amenity.id == amenity_id).first()
             if amenity:
                 amenities.append(amenity)
@@ -293,6 +298,7 @@ class ApartmentService:
             )
 
         total_imgs = len(found_apartment.images)
+
         if total_imgs > 0:
             for index, image in enumerate(found_apartment.images):
                 delete_file_upload(f"data/banner/apartments/{apartment_id}", str(index))

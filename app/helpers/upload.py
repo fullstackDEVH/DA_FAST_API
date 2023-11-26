@@ -72,8 +72,7 @@ async def upload_files(
                 f.write(file_upload.file.read())
 
             uploaded_images.append(f"{endpoint}/{str(index)}")
-            print(f"image_path : {image_path}")
-
+            
         return uploaded_images
     except Exception as error:
         raise HTTPException(status_code=500, detail="Server error")
