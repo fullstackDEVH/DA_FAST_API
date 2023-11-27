@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, status, Path
 from ..database import get_db
 from sqlalchemy.orm import Session
-from ..schemas.room import CreateRoom, UpdateRoom
+from ..schemas.room import CreateRoom, UpdateRoom, TYPE_ROOM_ID
 from ..services.roomService import RoomService
 from ..helpers.response import make_response_object
 import logging
@@ -20,10 +20,11 @@ def get_rooms_service(db: Session = Depends(get_db)):
 
 @router.get("/", status_code=status.HTTP_200_OK)
 async def get_messages_in_room(
-    room_id: str,
+    id: str,
+    type_query: TYPE_ROOM_ID,
     roomService: RoomService = Depends(get_rooms_service),
 ):
-    response = await roomService.get_messages_in_room(room_id)
+    response = await roomService.get_messages_in_room(type_query=type_query, id=id)
     return make_response_object(response)
 
 

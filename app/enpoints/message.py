@@ -19,7 +19,7 @@ def get_messages_service(db: Session = Depends(get_db)):
     return MessageService(db)
 
 
-@router.get("/", status_code=status.HTTP_200_OK, response_model=CreateMessage)
+@router.get("/", status_code=status.HTTP_200_OK)
 async def get_message(
     message_id: str,
     messsageService: MessageService = Depends(get_messages_service),
@@ -28,17 +28,18 @@ async def get_message(
     return make_response_object(response)
 
 
-@router.post("/", status_code=status.HTTP_201_CREATED, response_model=CreateMessage)
+@router.post("/", status_code=status.HTTP_201_CREATED)
 async def create_message(
     message_data: CreateMessage,
     messsageService: MessageService = Depends(get_messages_service),
 ):
+    print(f" message_data : {message_data}")
     response = await messsageService.create_message(message_data)
     return make_response_object(response)
 
 
 @router.patch(
-    "/{message_id}", status_code=status.HTTP_200_OK, response_model=CreateMessage
+    "/{message_id}", status_code=status.HTTP_200_OK
 )
 async def update_message(
     message_data: UpdateMessage,
