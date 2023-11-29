@@ -32,8 +32,20 @@ class RoomService:
         room_query = (
             self.db.query(Room)
             .join(MembersRoom, MembersRoom.room_id == Room.id)
-            .filter(MembersRoom.user_id.in_([sender_id, receiver_id]))
-            .group_by(Room.id)
+            .filter(
+                Room.id.in_(
+                    self.db.query(Room.id)
+                    .join(MembersRoom, MembersRoom.room_id == Room.id)
+                    .filter(MembersRoom.user_id == sender_id)
+                )
+            )
+            .filter(
+                Room.id.in_(
+                    self.db.query(Room.id)
+                    .join(MembersRoom, MembersRoom.room_id == Room.id)
+                    .filter(MembersRoom.user_id == receiver_id)
+                )
+            )
         )
         existing_room = room_query.first()
 
