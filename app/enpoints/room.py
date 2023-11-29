@@ -18,6 +18,18 @@ def get_rooms_service(db: Session = Depends(get_db)):
     return RoomService(db)
 
 
+@router.get("/users", status_code=status.HTTP_200_OK)
+async def get_room_users(
+    sender_id: str,
+    receiver_id: str,
+    roomService: RoomService = Depends(get_rooms_service),
+):
+    response = await roomService.get_room_users(
+        sender_id=sender_id, receiver_id=receiver_id
+    )
+    return make_response_object(response)
+
+
 @router.get("/", status_code=status.HTTP_200_OK)
 async def get_messages_in_room(
     id: str,

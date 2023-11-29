@@ -28,6 +28,17 @@ class RoomService:
         self.db.refresh(room_create)
         return room_create
 
+    async def get_room_users(self, sender_id: str, receiver_id: str):
+        room_query = (
+            self.db.query(Room)
+            .join(MembersRoom, MembersRoom.room_id == Room.id)
+            .filter(MembersRoom.user_id.in_([sender_id, receiver_id]))
+            .group_by(Room.id)
+        )
+        existing_room = room_query.first()
+
+        return existing_room
+
     async def get_room_by_id(self, room_id: str):
         return self.db.query(Room).filter(Room.id == room_id).first()
 
@@ -45,7 +56,7 @@ class RoomService:
                 .options(
                     contains_eager(Room.messages).options(contains_eager(Message.user))
                 )
-                .order_by(desc(Message.created_at))
+                # .order_by(desc(Message.created_at))
                 .all()
             )
 

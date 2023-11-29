@@ -62,6 +62,7 @@ class User(Base):
         onupdate=func.current_timestamp(),
     )
 
+    apartments = relationship("Apartment", back_populates="owner")
     user_contract = relationship("Contract", back_populates="user")
     user_bill = relationship("Bill", back_populates="user")
     messages = relationship("Message", back_populates="user")
@@ -115,8 +116,12 @@ class Apartment(Base):
     num_living_rooms = Column(Integer, nullable=False)
     num_bathrooms = Column(Integer, nullable=False)
     total_people = Column(Integer, nullable=False)
+    is_approved = Column(Boolean, nullable=True, default=False)
+
+    user_id = Column(String(255), ForeignKey("user.id", ondelete="CASCADE"))
 
     # Tạo mối quan hệ với bảng User
+    owner = relationship("User", back_populates="apartments")
     apartment_contract = relationship("Contract", back_populates="apartment")
     apartment_tags = relationship("ApartmentTag", back_populates="apartment")
     amenities = relationship(

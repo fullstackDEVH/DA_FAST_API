@@ -98,6 +98,7 @@ class ApartmentService:
             .filter_by(id=apartment_id)
             .options(
                 joinedload(Apartment.comments),
+                joinedload(Apartment.owner),
                 joinedload(Apartment.images),
                 joinedload(Apartment.apartment_contract),  # Lấy thông tin hợp đồng
                 joinedload(Apartment.apartment_tags).joinedload(
@@ -140,12 +141,12 @@ class ApartmentService:
             address=apartment.address,
             city=apartment.city,
             apartment_type=apartment.apartment_type,
+            user_id=apartment.user_id,
         )
 
         apartment_tags = []
 
         for tag_id in apartment.tag_ids:
-            print(f"tag_id : {tag_id}")
             apartment_tag = ApartmentTag(
                 id=str(uuid.uuid4()), apartment_id=apartment_create.id, tag_id=tag_id
             )

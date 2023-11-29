@@ -56,4 +56,5 @@ class ApartmentCreateSchte(BaseModel):
     tag_ids: list[str]
     amenities: list[str]
     address: str
+    user_id: str
     apartment_type: ApartmentType
