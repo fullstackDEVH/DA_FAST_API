@@ -19,6 +19,7 @@ class UpdateContractSchema(BaseModel):
     end_date: datetime | None = None
     apartment_id: str | None = None
     user_id: str | None = None
+    status: str | None = None
 
 
 class TYPE_CONTRACT_ID(str, Enum):

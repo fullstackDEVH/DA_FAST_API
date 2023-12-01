@@ -1,5 +1,5 @@
 from fastapi import status, UploadFile, HTTPException
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session, joinedload, contains_eager
 from ..database import (
     Apartment,
     ApartmentTag,
@@ -8,6 +8,7 @@ from ..database import (
     apartment_amenity,
     ApartmentImage,
     ApartmentImage,
+    Contract,
 )
 from ..schemas.apartment import (
     ApartmentSchema,
@@ -100,15 +101,12 @@ class ApartmentService:
                 joinedload(Apartment.comments),
                 joinedload(Apartment.owner),
                 joinedload(Apartment.images),
-                joinedload(Apartment.apartment_contract),  # Lấy thông tin hợp đồng
-                joinedload(Apartment.apartment_tags).joinedload(
-                    ApartmentTag.tag
-                ),  # Lấy thông tin các thẻ và tên thẻ
-                joinedload(Apartment.amenities),  # Lấy thông tin về tiện nghi
+                joinedload(Apartment.apartment_contract),
+                joinedload(Apartment.apartment_tags).joinedload(ApartmentTag.tag),
+                joinedload(Apartment.amenities),
             )
             .first()
         )
-
         total_rating = 0
 
         if len(apartment.comments) > 0:

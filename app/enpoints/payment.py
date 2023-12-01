@@ -10,12 +10,11 @@ router = APIRouter()
 
 
 class PaymentForm(BaseModel):
-    order_type: str
+    # order_type: str
+    # order_desc: str
     order_id: str
+    redirect_return: str
     amount: float
-    order_desc: str
-    bank_code: str
-    language: str
 
 
 def hmacsha512(key, data):
@@ -42,7 +41,7 @@ async def create_payment_url(
     tmn_code = "5IC90V17"
     secret_key = "INDHUKCOVGQHGOONVQTDZJDXCAWODRZS"
     vnp_url = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html"
-    return_url = f"http://{ip_addr}:3000/"
+    return_url = f"http://{ip_addr}:3000{payment.redirect_return}"
 
     curr_code = "VND"
     date = datetime.now().strftime("%Y%m%d%H%M%S")
@@ -53,9 +52,9 @@ async def create_payment_url(
         "vnp_Locale": "vn",
         "vnp_CurrCode": curr_code,
         "vnp_TxnRef": date,
-        "vnp_OrderInfo": f"Thanh toan cho ma GD:{date}",
-        "vnp_OrderType": "other",
-        "vnp_Amount": int(payment.amount * 100),
+        "vnp_OrderInfo": payment.order_id,
+        "vnp_OrderType": "apartment",
+        "vnp_Amount": int(payment.amount * 100 * 24000),
         "vnp_ReturnUrl": return_url,
         "vnp_IpAddr": ip_addr,
         "vnp_CreateDate": datetime.now().strftime("%Y%m%d%H%M%S"),
@@ -71,6 +70,7 @@ async def create_payment_url(
     ).hexdigest()
     vnp_params["vnp_SecureHash"] = hmac_signature
 
+    print(f"vnp_params : {vnp_params}")
     # Redirect the user to the VNP URL
     query = convert_to_query_string(vnp_params)
     return f"{vnp_url}?{query}"

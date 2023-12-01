@@ -1,5 +1,6 @@
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session, joinedload
+from sqlalchemy import and_
 from ..schemas.contract import (
     CreateContractSchema,
     TYPE_CONTRACT_ID,
@@ -47,6 +48,12 @@ class ContractService:
             .all()
         )
 
+    async def get_contract_apartment(self, apartment_id: str):
+        query_conditions = and_(
+            Contract.apartment_id == apartment_id, Contract.status == "success"
+        )
+        return self.db.query(Contract).filter(query_conditions).all()
+
     async def get_contract_latest(self):
         return (
             self.db.query(Contract)
@@ -63,7 +70,7 @@ class ContractService:
         if type_id == TYPE_CONTRACT_ID.USER_ID:
             return (
                 self.db.query(Contract)
-                .filter(Contract.user_id == id)
+                .filter(Contract.user_id == id, Contract.status == "success")
                 .options(joinedload(Contract.apartment).joinedload(Apartment.images))
                 .all()
             )
@@ -73,17 +80,17 @@ class ContractService:
         return self.db.query(Contract).filter(Contract.id == id).first()
 
     async def create(self, contract: CreateContractSchema):
-        found_contract = (
-            self.db.query(Contract)
-            .filter(
-                Contract.apartment_id == contract.apartment_id,
-                Contract.user_id == contract.user_id,
-            )
-            .first()
-        )
+        # found_contract = (
+        #     self.db.query(Contract)
+        #     .filter(
+        #         Contract.apartment_id == contract.apartment_id,
+        #         Contract.user_id == contract.user_id,
+        #     )
+        #     .first()
+        # )
 
-        if found_contract:
-            raise HTTPException(status_code=400, detail="Contract is exist !!")
+        # if found_contract:
+        #     raise HTTPException(status_code=400, detail="Contract is exist !!")
 
         contract_create = Contract(
             id=str(uuid.uuid4()),
