@@ -11,6 +11,7 @@ from .enpoints import (
     statistical,
     room,
     message,
+    payment
 )
 from .socket import router as socket_router
 
@@ -32,5 +33,7 @@ router.include_router(
 )
 
 router.include_router(message.router, prefix="/messages", tags=["messages"])
+router.include_router(payment.router, prefix="/payments", tags=["payments"])
+
 
 router.include_router(room.router, prefix="/rooms", tags=["rooms"])
