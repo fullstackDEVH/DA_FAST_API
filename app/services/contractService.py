@@ -1,6 +1,6 @@
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import and_
+from sqlalchemy import and_, func
 from ..schemas.contract import (
     CreateContractSchema,
     TYPE_CONTRACT_ID,
@@ -37,16 +37,27 @@ class ContractService:
         contract, user, apartment = result
         return {"contract": contract, "owner": user, "apartment": apartment}
 
-    async def get_contracts(self):
-        return (
+    async def get_contracts(self, page: int):
+        limit = 6
+        skip = ((page) - 1) * limit
+
+        contracts = (
             self.db.query(Contract)
             .order_by(desc(Contract.created_at))
+            .offset(skip)
+            .limit(limit)
             .options(
                 joinedload(Contract.user),
-                joinedload(Contract.apartment).options(joinedload(Apartment.images)),
+                joinedload(Contract.apartment).options(
+                    joinedload(Apartment.images), joinedload(Apartment.owner)
+                ),
             )
             .all()
         )
+
+        total_record = self.db.query(func.count(Contract.id)).scalar()
+
+        return {"data": contracts, "total_record": total_record}
 
     async def get_contract_apartment(self, apartment_id: str):
         query_conditions = and_(

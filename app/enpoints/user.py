@@ -23,12 +23,14 @@ def get_user_service(db: Session = Depends(get_db)):
 
 @router.get("/all", status_code=status.HTTP_200_OK)
 async def get_users(
-    username: str | None = None,
+    page: int = None,
+    email: str = None,
     userService: UserService = Depends(get_user_service),
     # access_token=Depends(JWTBearer()),
 ):
-    response = await userService.gets()
-    return make_response_object(response)
+    kwargs = {"email": email, "page": page}
+    response = await userService.gets(**kwargs)
+    return response
 
 
 @router.get("/", status_code=status.HTTP_200_OK)

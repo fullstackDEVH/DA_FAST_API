@@ -1,6 +1,7 @@
 from fastapi import status, UploadFile
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from ..database import User, Contract
 from ..schemas import user
 from ..helpers.auth import verify_password, hash_password
@@ -115,9 +116,25 @@ class UserService:
 
         return found_user
 
-    async def gets(self):
-        found_users = self.db.query(User).all()
-        return found_users
+    async def gets(self, **kwargs):
+        email = kwargs.get("email")
+        page = kwargs.get("page")
+
+        limit = 6
+        skip = ((page) - 1) * limit
+        query = self.db.query(User)
+
+        if email is not None:
+            query = query.filter(User.email.ilike(f"%{email}%"))
+
+        if page is not None :
+            query = query.offset(skip).limit(limit)
+
+        found_users = query.all()
+
+        total_record = self.db.query(func.count(User.id)).scalar()
+
+        return {"data": found_users, "total_record": total_record}
 
     async def update_avatar(self, avatar: UploadFile, user_id: str):
         found_user = await self.get_user_by_id(user_id)

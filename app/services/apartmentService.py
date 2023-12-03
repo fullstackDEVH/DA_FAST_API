@@ -15,6 +15,7 @@ from ..schemas.apartment import (
     ApartmentUpdateSchema,
     ApartmentCreateSchte,
 )
+from sqlalchemy import func
 from ..helpers.upload import delete_file_upload, upload_files
 from typing import List
 import uuid
@@ -36,8 +37,17 @@ class ApartmentService:
         lowest_price = argsKwg.get("lowest_price")
         hightest_price = argsKwg.get("hightest_price")
         apartment_type = argsKwg.get("apartment_type")
+        name = argsKwg.get("name")
+        page = argsKwg.get("page")
+        is_approved = argsKwg.get("is_approved")
 
         filters = []
+
+        if name:
+            filters.append(filters.append(Apartment.name.ilike(f"%{name}%")))
+
+        if is_approved is not None:
+            filters.append(Apartment.is_approved == is_approved)
 
         if lowest_price is not None and hightest_price is not None:
             filters.append(
@@ -54,15 +64,17 @@ class ApartmentService:
             print(amenities)
             filters.append(Apartment.amenities.any(Amenity.name.in_(amenities)))
 
-        apartments = (
-            self.db.query(Apartment)
-            .filter(*filters)
-            .options(
-                joinedload(Apartment.images),
-                joinedload(Apartment.comments),
-            )
-            .all()
-        )
+        query = self.db.query(Apartment).filter(*filters)
+
+        if page:
+            limit = 6
+            skip = (page - 1) * limit
+            query = query.offset(skip).limit(limit)
+
+        apartments = query.options(
+            joinedload(Apartment.images),
+            joinedload(Apartment.comments),
+        ).all()
 
         for apartment in apartments:
             if len(apartment.comments) < 1:
@@ -81,7 +93,8 @@ class ApartmentService:
                     (total_rating_in_comment / len(apartment.comments)), 1
                 )
 
-        return apartments
+        total_record = self.db.query(func.count(Apartment.id)).filter(*filters).scalar()
+        return {"data": apartments, "total_record": total_record}
 
     async def get_apartment_by_apartment_id(
         self, apartment_id: str | None = None
@@ -126,7 +139,7 @@ class ApartmentService:
 
         return apartment
 
-    async def create_apartment(self, apartment: ApartmentCreateSchte):
+    async def create_apartment(self, apartment: ApartmentCreateSchte, user_id: str):
         apartment_create = Apartment(
             id=str(uuid.uuid4()),
             name=apartment.name,
@@ -139,7 +152,8 @@ class ApartmentService:
             address=apartment.address,
             city=apartment.city,
             apartment_type=apartment.apartment_type,
-            user_id=apartment.user_id,
+            user_id=user_id,
+            is_approved=apartment.is_approved,
         )
 
         apartment_tags = []
@@ -215,20 +229,24 @@ class ApartmentService:
         lowest_price = argsKw.get("lowest_price")
         hightest_price = argsKw.get("hightest_price")
         apartment_type = argsKw.get("apartment_type")
+        is_approved = argsKw.get("is_approved")
 
         filters = []
 
         filters.append(ApartmentTag.tag_id == tag_id)
+        print(f"is_approved : {is_approved}")
+        if is_approved is not None:
+            filters.append(Apartment.is_approved == is_approved)
 
         if lowest_price and hightest_price:
             filters.append(
                 Apartment.price_per_day.between(lowest_price, hightest_price)
             )
 
-        if city:
+        if city is not None:
             filters.append(Apartment.city == city)
 
-        if apartment_type:
+        if apartment_type is not None:
             filters.append(Apartment.apartment_type == apartment_type)
 
         if amenities:
@@ -260,7 +278,7 @@ class ApartmentService:
                     total_rating_in_comment / len(apartment.comments), 1
                 )
 
-        return apartments_with_tag
+        return {"data" : apartments_with_tag}
 
     async def update(self, apartment_id: str, apartment: ApartmentUpdateSchema):
         found_apartment = (
@@ -273,7 +291,6 @@ class ApartmentService:
             )
 
         apartment_update = apartment.model_dump(exclude_unset=True)
-
         for key, value in apartment_update.items():
             setattr(found_apartment, key, value)
 

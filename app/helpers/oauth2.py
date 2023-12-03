@@ -26,6 +26,15 @@ def decodeJWT(token: str) -> dict:
         return {}
 
 
+def get_user_in_access_token(access_token: str):
+    token = decodeJWT(access_token)
+
+    if "user_id" not in token and not token["user_id"]:
+        raise HTTPException(status_code=401, detail="Token Invalid")
+
+    return token["user_id"]
+
+
 # The goal of this file is to check whether the reques tis authorized or not [ verification of the proteced route]
 
 

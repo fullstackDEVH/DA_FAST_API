@@ -51,10 +51,11 @@ async def get_contract_apartment(
 
 @router.get("/all", status_code=status.HTTP_200_OK)
 async def get_contracts(
+    page : int= None,
     contractService: ContractService = Depends(get_contract_service),
 ):
-    response = await contractService.get_contracts()
-    return make_response_object(response)
+    response = await contractService.get_contracts(page)
+    return response
 
 
 @router.get("/information", status_code=status.HTTP_200_OK)

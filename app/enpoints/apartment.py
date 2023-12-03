@@ -7,11 +7,13 @@ from ..schemas.apartment import (
     ApartmentUpdateSchema,
     ApartmentCreateSchte,
     ApartmentType,
-    ApartmentCity
+    ApartmentCity,
 )
 from ..helpers.oauth2 import JWTBearer
 from ..services.apartmentService import ApartmentService
+from ..services import userService
 from ..helpers.response import make_response_object
+from ..helpers.oauth2 import get_user_in_access_token
 from fastapi.responses import FileResponse
 import logging
 import os
@@ -30,10 +32,14 @@ def get_apartment_service(db: Session = Depends(get_db)):
 
 @router.get("/all", status_code=status.HTTP_200_OK)
 async def get_apartments(
+    name: str = None,
+    page: int = None,
+    is_approved: bool = None,
     apartmentService: ApartmentService = Depends(get_apartment_service),
 ):
-    response = await apartmentService.gets_all()
-    return make_response_object(response)
+    args = {"name": name, "page": page, "is_approved": is_approved}
+    response = await apartmentService.gets_all(**args)
+    return response
 
 
 @router.get("/", status_code=status.HTTP_200_OK)
@@ -55,6 +61,7 @@ async def gets_apartment_by_tag_id(
     amenities: list = Query(
         None, title="Amenity Names", description="List of amenity names"
     ),
+    is_approved: bool = None,
     apartmentService: ApartmentService = Depends(get_apartment_service),
 ):
     argsKwg = {
@@ -62,7 +69,8 @@ async def gets_apartment_by_tag_id(
         "lowest_price": lowest_price,
         "hightest_price": hightest_price,
         "apartment_type": apartment_type,
-        "amenities" : amenities
+        "amenities": amenities,
+        "is_approved": is_approved,
     }
 
     if tag_id is not None:
@@ -72,7 +80,7 @@ async def gets_apartment_by_tag_id(
     else:
         response = await apartmentService.gets_all(**argsKwg)
 
-    return make_response_object(response)
+    return response
 
 
 @router.get("/{apartment_id}/apartment", status_code=status.HTTP_200_OK)
@@ -103,8 +111,10 @@ async def get_file(apartment_id: str, index: int):
 async def create_apartment(
     apartment: ApartmentCreateSchte = Depends(),
     apartmentService: ApartmentService = Depends(get_apartment_service),
+    access_token=Depends(JWTBearer()),
 ):
-    response = await apartmentService.create_apartment(apartment)
+    user_id = get_user_in_access_token(access_token)
+    response = await apartmentService.create_apartment(apartment, user_id=user_id)
     return response
 
 

@@ -42,6 +42,7 @@ class ApartmentUpdateSchema(BaseModel):
     city: str | None = None
     address: str | None = None
     apartment_type: str | None = None
+    is_approved: bool | None = None
 
 
 class ApartmentCreateSchte(BaseModel):
@@ -56,5 +57,5 @@ class ApartmentCreateSchte(BaseModel):
     tag_ids: list[str]
     amenities: list[str]
     address: str
-    user_id: str
     apartment_type: ApartmentType
+    is_approved: bool
