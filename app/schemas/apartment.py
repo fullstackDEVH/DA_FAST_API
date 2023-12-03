@@ -17,6 +17,8 @@ class ApartmentCity(str, Enum):
     HA = "HA"
     HUE = "HUE"
     DL = "DL"
+    SAPA = "SAPA"
+    
 
 
 class ApartmentSchema(BaseModel):

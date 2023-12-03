@@ -99,7 +99,7 @@ class Apartment(Base):
     __tablename__ = "apartment"
 
     id = Column(String(255), primary_key=True)
-    name = Column(String(42), nullable=False, index=True)
+    name = Column(String(255), nullable=False, index=True)
     desc = Column(TEXT)
     address = Column(String(255))
     created_at = Column(TIMESTAMP(timezone=True), server_default=text("now()"))
