@@ -21,6 +21,15 @@ def get_user_service(db: Session = Depends(get_db)):
     return UserService(db)
 
 
+@router.get("/verify-active/user", status_code=status.HTTP_200_OK)
+async def user_verify_active(
+    email: str, verify_code: str, userService: UserService = Depends(get_user_service)
+):
+    print(email)
+    await userService.active_user(email=email, verify_code=verify_code)
+    return {"message": "Create user success!!"}
+
+
 @router.get("/all", status_code=status.HTTP_200_OK)
 async def get_users(
     page: int = None,

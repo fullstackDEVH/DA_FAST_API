@@ -9,5 +9,12 @@ class CreateMessage(BaseModel):
     content: str
 
 
+class CreateMessageSocket(BaseModel):
+    sender_id: str
+    room_id: str
+    content: str
+    receiver_id: str | None = None
+
+
 class UpdateMessage(BaseModel):
     content: str | None = None

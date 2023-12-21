@@ -33,7 +33,6 @@ async def create_message(
     message_data: CreateMessage,
     messsageService: MessageService = Depends(get_messages_service),
 ):
-    print(f" message_data : {message_data}")
     response = await messsageService.create_message(message_data)
     return make_response_object(response)
 

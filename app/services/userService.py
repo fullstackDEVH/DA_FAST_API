@@ -11,7 +11,8 @@ import uuid
 import logging
 import smtplib
 from ..helpers.upload import upload_file
-
+import random
+import string
 
 logging.basicConfig(level=logging.INFO)
 
@@ -27,10 +28,10 @@ class UserService:
         smtp_server = "smtp.gmail.com"
         smtp_port = 587
         sender_email = "huyhg2521@gmail.com"
-        sender_password = "huy20052001"
+        sender_password = "jexi xdhc ghso bigu"
 
         msg = MIMEText(
-            f"Click this link to verify your email: http://example.com/verify/{verification_code}"
+            f"Click this link to verify your email: http://127.0.0.1:8000/api/users/verify-active/user?email={email}&verify_code={verification_code}"
         )
         msg["Subject"] = "Email Verification"
         msg["From"] = sender_email
@@ -69,10 +70,16 @@ class UserService:
         found_user = await self.get_user_by_email(email=user_obj.email)
 
         if found_user is None:
-            raise HTTPException(status_code=404, detail="User not found")
+            raise HTTPException(
+                status_code=404,
+                detail={"message": "Thông tin đăng nhập không chính xác"},
+            )
 
         if not verify_password(user_obj.password, found_user.password):
-            raise HTTPException(status_code=401, detail="Invalid credentials")
+            raise HTTPException(
+                status_code=401,
+                detail={"message": "Thông tin đăng nhập không chính xác"},
+            )
 
         return await self.generate_tokens(found_user.id)
 
@@ -80,28 +87,42 @@ class UserService:
         found_user = await self.get_user_by_email(email=user_obj.email)
 
         if found_user:
-            raise HTTPException(status_code=400, detail="Email is exist!!")
-
-        self.db.add(
-            User(
-                id=uuid.uuid4(),
-                username=user_obj.username,
-                phonenumber=user_obj.phonenumber,
-                email=user_obj.email,
-                password=hash_password(user_obj.password),
-                system_role=user_obj.system_role,
+            raise HTTPException(
+                status_code=400, detail={"message": "Tài khoản đã tồn tại"}
             )
+        user = User(
+            id=uuid.uuid4(),
+            username=user_obj.username,
+            phonenumber=user_obj.phonenumber,
+            email=user_obj.email,
+            password=hash_password(user_obj.password),
+            system_role=user_obj.system_role,
+            address=user_obj.address,
         )
+        self.db.add(user)
+
+        def generate_random_code(length):
+            characters = string.ascii_letters + string.digits
+            random_code = "".join(random.choice(characters) for _ in range(length))
+            return random_code
+
+        code = generate_random_code(10)
+        user.verification_code = code
+
+        try:
+            await self.send_verification_email(
+                email=user_obj.email, verification_code=code
+            )
+        except Exception as e:
+            self.db.rollback()
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to send verification email. User not created.",
+            )
 
         self.db.commit()
 
-        # characters = string.ascii_letters + string.digits
-        # verify_code = "".join(secrets.choice(characters) for _ in range(8))
-        # await self.send_verification_email(
-        #     email=user_obj.email, verification_code=verify_code
-        # )
-
-        return {}
+        return "Please check your mail"
 
     async def user_refresh_token(self, access_token: str):
         user_id = self.get_user_in_access_token(access_token)
@@ -119,7 +140,6 @@ class UserService:
     async def gets(self, **kwargs):
         email = kwargs.get("email")
         page = kwargs.get("page")
-
         limit = 6
         skip = ((page) - 1) * limit
         query = self.db.query(User)
@@ -127,7 +147,7 @@ class UserService:
         if email is not None:
             query = query.filter(User.email.ilike(f"%{email}%"))
 
-        if page is not None :
+        if page is not None:
             query = query.offset(skip).limit(limit)
 
         found_users = query.all()
@@ -153,6 +173,23 @@ class UserService:
         self.db.commit()
 
         return f"users/{user_id}/avatar"
+
+    async def active_user(self, verify_code, email):
+        found_user = (
+            self.db.query(User)
+            .filter(User.email == email, User.verification_code == verify_code)
+            .first()
+        )
+
+        if found_user is None:
+            raise HTTPException(
+                status_code=400, detail="Email or verify code invalid!!"
+            )
+
+        found_user.isVerify = True
+        self.db.commit()
+
+        return "User is actived"
 
     async def update_user(self, user_id: str, user_update: user.UserUpdateSchema):
         found_user = await self.get_user_by_id(user_id)
