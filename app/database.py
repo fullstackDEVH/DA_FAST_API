@@ -18,7 +18,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import ENUM as pgEnum
 from enum import Enum
 
-DATABASE_URL = "postgresql://admin:admin@localhost:5432/DoAn_Apartment"
+DATABASE_URL = "postgresql://postgres:postgres@localhost:5432/DoAn_Apartment"
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

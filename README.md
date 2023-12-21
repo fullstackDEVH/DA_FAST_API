@@ -23,6 +23,11 @@ poetry remove library_name : xoá
 1 : alembic init alembic
 
 setup file alembic/env và alembic.ini
+ - alembic/env
+  + from app.database import Base
+  + target_metadata = Base.metadata
+ - alembic.ini
+  + sqlalchemy.url = postgresql://postgres:postgres@localhost:5432/DoAn_Apartment
 
 <!-- tạo phiên bản mới khi chỉnh sửa table -->
 2 : alembic revision --autogenerate -m "Mô tả thay đổi"

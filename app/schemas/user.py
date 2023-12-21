@@ -27,6 +27,7 @@ class UserCreateSchema(BaseModel):
     username: str
     password: str
     system_role: str = "RENTER"
+    address: str | None = None
 
 
 class UserUpdateSchema(BaseModel):
