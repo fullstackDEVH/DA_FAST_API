@@ -1,7 +1,12 @@
 from fastapi import APIRouter, Depends, status, UploadFile, File
 from ..database import get_db
 from sqlalchemy.orm import Session
-from ..schemas.user import UserCreateSchema, UserLoginSchema, UserUpdateSchema
+from ..schemas.user import (
+    UserCreateSchema,
+    UserLoginSchema,
+    UserUpdateSchema,
+    UserChangePasswordSchema,
+)
 from ..helpers.oauth2 import JWTBearer
 from ..services.userService import UserService
 from ..helpers.response import make_response_object
@@ -124,6 +129,16 @@ async def update_user(
     return make_response_object(response)
 
 
+@router.patch("/update_user/{user_id}", status_code=status.HTTP_200_OK)
+async def update_user(
+    user_id: str,
+    user_update: UserUpdateSchema,
+    userService: UserService = Depends(get_user_service),
+):
+    response = await userService.update_user(user_id=user_id, user_update=user_update)
+    return make_response_object(response)
+
+
 @router.delete("/", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_user(
     email: str,
@@ -131,4 +146,15 @@ async def delete_user(
     userService: UserService = Depends(get_user_service),
 ):
     response = await userService.delete_user(email, user_id)
+    return make_response_object(response)
+
+
+@router.put("/change-password", status_code=status.HTTP_200_OK)
+async def delete_user(
+    data: UserChangePasswordSchema,
+    userService: UserService = Depends(get_user_service),
+):
+    response = await userService.change_password(
+        email=data.email, password=data.password
+    )
     return make_response_object(response)

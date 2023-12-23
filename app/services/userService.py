@@ -54,7 +54,7 @@ class UserService:
         return token["user_id"]
 
     async def generate_tokens(self, user_id):
-        access_token = signJWT(user_id=user_id, expires=1800)
+        access_token = signJWT(user_id=user_id, expires=18000)
         refresh_token = signJWT(user_id=user_id, expires=172800)
         return {"access_token": access_token, "refresh_token": refresh_token}
 
@@ -219,3 +219,10 @@ class UserService:
         self.db.delete(found_user_query)
         self.db.commit()
         return {"message": f"Xoá gmail : {email} thành công."}
+
+    async def change_password(self, email, password,):
+        found_user_query = await self.get_user_by_email(email)
+        found_user_query.password = hash_password(password)
+        self.db.commit()
+        self.db.refresh(found_user_query)
+        return {"message": f"Thay đổi mật khẩu , {email} thành công."}

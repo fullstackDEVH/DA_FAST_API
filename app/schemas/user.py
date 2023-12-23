@@ -44,3 +44,8 @@ class userResponseSchema(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class UserChangePasswordSchema(BaseModel):
+    email: str | None = None
+    password: str | None = None
